@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Eggward",
+  "version": "0.1.0",
+  "description": "A study pet that locks ordinary tabs when you drift.",
+  "permissions": ["storage", "tabs", "alarms", "idle"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Eggward"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["egg.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

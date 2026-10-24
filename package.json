@@ -1,0 +1,20 @@
+{
+  "name": "eggward",
+  "private": true,
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c yellow,cyan \"npm run dev -w eggward-server\" \"npm run dev -w eggward-web\"",
+    "check": "npm run check -w eggward-server",
+    "build": "npm run build -w eggward-web",
+    "start": "npm run build -w eggward-web && npm run start -w eggward-server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

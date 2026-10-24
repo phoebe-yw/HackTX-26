@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Eggward</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Eggward</p>
+        <div class="steps" id="steps" aria-hidden="true">
+          <span data-step="you"></span>
+          <span data-step="look"></span>
+          <span data-step="room"></span>
+        </div>
+      </header>
+
+      <section id="step-you">
+        <div class="preview" id="preview-you"></div>
+        <h1>What should I call you?</h1>
+        <p class="lede">I sit on your tabs. Your friends only see this name.</p>
+        <label>
+          Your name
+          <input id="name" maxlength="24" placeholder="Maya" autocomplete="nickname" />
+        </label>
+        <button id="to-look" type="button">Continue</button>
+        <p id="you-error" class="error"></p>
+      </section>
+
+      <section id="step-look" class="hidden">
+        <div class="preview" id="preview-look"></div>
+        <h1>Pick your buddy</h1>
+        <p class="lede">Same moods. Your colors.</p>
+        <p class="label">Shell</p>
+        <div class="swatches" id="shells">
+          <button type="button" class="swatch" data-shell="cream" style="background: #fffaf2" aria-label="Cream"></button>
+          <button type="button" class="swatch" data-shell="yolk" style="background: #ffe08a" aria-label="Yolk"></button>
+          <button type="button" class="swatch" data-shell="mint" style="background: #b7f0c8" aria-label="Mint"></button>
+          <button type="button" class="swatch" data-shell="lilac" style="background: #e4d4ff" aria-label="Lilac"></button>
+          <button type="button" class="swatch" data-shell="sky" style="background: #c9e7ff" aria-label="Sky"></button>
+          <button type="button" class="swatch" data-shell="peach" style="background: #ffc7bc" aria-label="Peach"></button>
+        </div>
+        <p class="label">Extra</p>
+        <div class="pills" id="accessories">
+          <button type="button" class="pill" data-accessory="none">Plain</button>
+          <button type="button" class="pill" data-accessory="bow">Bow</button>
+          <button type="button" class="pill" data-accessory="sprout">Sprout</button>
+          <button type="button" class="pill" data-accessory="glasses">Glasses</button>
+        </div>
+        <div class="row">
+          <button id="look-back" class="ghost" type="button">Back</button>
+          <button id="to-room" type="button">Continue</button>
+        </div>
+      </section>
+
+      <section id="step-room" class="hidden">
+        <div class="preview" id="preview-room"></div>
+        <h1>Find the room</h1>
+        <p class="lede">Create one, or walk into a code you already have.</p>
+        <button id="create" type="button">Create a room</button>
+        <p class="or">or join</p>
+        <form id="join-form" class="row">
+          <input id="room" maxlength="8" placeholder="EGG1" aria-label="Room code" />
+          <button class="ghost" type="submit">Join</button>
+        </form>
+        <p id="room-error" class="error"></p>
+        <details>
+          <summary>Connection</summary>
+          <label>API <input id="server" value="http://localhost:3000" /></label>
+          <label>Phone page <input id="app" value="http://localhost:5173" /></label>
+        </details>
+      </section>
+
+      <section id="step-home" class="hidden">
+        <div class="home-top">
+          <div class="preview small" id="preview-home"></div>
+          <div>
+            <p class="eyebrow" id="home-kicker">Room</p>
+            <h1 id="code">EGG1</h1>
+            <p id="status">Checking the room.</p>
+          </div>
+        </div>
+        <img id="qr" alt="QR code for this room" width="148" height="148" />
+        <p id="link" class="fine"></p>
+        <div class="row">
+          <button id="visibility" class="ghost" type="button">Hide buddy</button>
+          <button id="mad" class="danger" type="button">Demo: get mad</button>
+        </div>
+        <form id="focus-form">
+          <label>Working on <input id="goal" maxlength="80" placeholder="turn in the essay" /></label>
+          <label>Work sites <input id="sites" placeholder="docs.google.com, wikipedia.org" /></label>
+          <div class="row">
+            <button class="ghost" type="submit">Save work</button>
+            <button id="canvas" class="ghost" type="button">Add Canvas</button>
+          </div>
+        </form>
+        <p id="focus-status" class="fine"></p>
+        <form id="block-form" class="row">
+          <input id="domain" placeholder="tiktok.com" aria-label="Block a domain" />
+          <button class="ghost" type="submit">Block</button>
+        </form>
+        <p id="blocked" class="fine"></p>
+        <div class="row">
+          <button id="open" class="ghost" type="button">Open camera page</button>
+          <button id="retouch" class="ghost" type="button">Edit buddy</button>
+        </div>
+        <button id="unlock" class="ghost hidden" type="button">Host override</button>
+        <button id="leave" class="ghost" type="button">Leave room</button>
+        <p id="home-error" class="error"></p>
+        <p class="fine">This covers web pages, not the desktop. Disabling the extension removes the lock. The camera stays on the phone page.</p>
+        <details>
+          <summary>Connection</summary>
+          <label>API <input id="server-home" /></label>
+          <label>Phone page <input id="app-home" /></label>
+          <button id="save-connection" class="ghost" type="button">Save</button>
+        </details>
+      </section>
+    </main>
+    <script src="egg.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
