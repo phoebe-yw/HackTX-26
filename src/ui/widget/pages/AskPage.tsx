@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { send } from '@/core/messaging';
 import type { Settings } from '@/core/types';
 import { useStored } from '../../hooks';
+import { Markdown } from '../../components/Markdown';
 import { ProviderBadge } from '../../components/ProviderBadge';
 import { RoomPanel } from './RoomPanel';
 
@@ -71,7 +72,7 @@ function PetChat({ settings }: { settings: Settings }) {
         )}
         {history?.map((m) => (
           <div key={m.id} className={`msg ${m.role}`}>
-            {m.text}
+            {m.role === 'pet' ? <Markdown text={m.text} /> : m.text}
             {m.role === 'pet' && (
               <span className="meta">
                 <ProviderBadge provider={m.provider} prefix={m.withScreen ? '👁️ saw your screen' : undefined} />

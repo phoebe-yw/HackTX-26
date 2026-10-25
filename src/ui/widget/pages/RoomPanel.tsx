@@ -3,6 +3,7 @@ import type { Settings } from '@/core/types';
 import { social } from '@/social/client';
 import { SK, type Me, type RoomState } from '@/social/types';
 import { CharacterArt } from '../../components/CharacterArt';
+import { Markdown } from '../../components/Markdown';
 import { ProviderBadge } from '../../components/ProviderBadge';
 import { useSessionStored } from '../../hooks';
 
@@ -66,8 +67,14 @@ export function RoomPanel({ settings }: { settings: Settings }) {
             {room.messages.length === 0 && <div className="empty">Room “{room.topic}” is open. Ask the group — or the Spirit — anything.</div>}
             {room.messages.map((m) => (
               <div key={m.id} className={`msg ${m.uid === me?.uid ? 'user' : 'pet'}`}>
-                {m.uid !== me?.uid && <b>{m.isAI ? '✨ Study Spirit' : m.name}: </b>}
-                {m.text}
+                {m.isAI ? (
+                  <Markdown text={m.text} lead={<b>✨ Study Spirit: </b>} />
+                ) : (
+                  <>
+                    {m.uid !== me?.uid && <b>{m.name}: </b>}
+                    {m.text}
+                  </>
+                )}
                 {m.isAI && <span className="meta"><ProviderBadge provider={m.provider} /></span>}
               </div>
             ))}

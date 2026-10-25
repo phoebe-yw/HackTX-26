@@ -6,10 +6,25 @@ Pick a character (Red Riding Hood, Cinderella, the Wolf, the Duck, Humpty Dumpty
 
 ## Tracks
 - **Best Use of Gemini API** — Gemini is the pet's *eyes* and its *social brain*. `visionAI` sends a downscaled screenshot to Gemini Flash for structured-JSON focus detection, roasts that reference what's really on screen, and "👁️ look at my screen" Q&A. `socialAI` uses Gemini for the Group Study Room, shared flashcards/quizzes, break-time icebreakers, and friend challenges. The UI shows a badge when Gemini answered, and falls back to a curated offline storybook if it can't.
-- **Jester's Court — Most Entertaining** — a pet with a mood state machine, five personalities, Gemini roasts, a storm-in LOCKDOWN with riddles, study quizzes, oaths typed backwards, and a glass-slipper unlock.
+- **Jester's Court — Most Entertaining** — a pet with a mood state machine, eight personalities, Gemini roasts, a storm-in LOCKDOWN with riddles, study quizzes, oaths typed backwards, and a glass-slipper unlock.
+
+## Features
+- **8 characters**, each with its own voice and 7 poses (idle, happy, suspicious, annoyed, furious, sleeping, celebrate): Red Riding Hood, Cinderella, the Wolf, the Duck, Humpty Dumpty, Poseidon, the Bat, the Witch.
+- **Focus sessions** with a Cinderella clock (Pomodoro, 52/17, deep work or custom), synced across tabs.
+- **Mood machine**: Happy → Suspicious → Annoyed → FURIOUS → LOCKDOWN, with three strictness levels (gentle, firm, wolf).
+- **Gemini screen checks** (opt-in) that return a JSON verdict, plus roasts about what's really on screen.
+- **LOCKDOWN** on every tab until you pass a trial: riddle, Gemini quiz on your topic, an oath typed backwards, or a friend's challenge. Hold **Esc for 5 s** to escape (the pet sulks).
+- **Ask** your pet anything, optionally with **👁️ look at my screen**. Replies render Markdown (bold, lists, code).
+- **Study Table**: friends via 6-character codes, live presence, nudges, challenges.
+- **Group Study Room**: one shared chat with a Gemini Study Spirit, shared flashcards and quizzes.
+- **Break Tavern**: Spellbound (word race), Tic-Tac-Toe and Connect Four against friends or matched strangers, with an AI icebreaker, chat and add-friend.
+- **Always works**: no Gemini answer means curated offline lines; no Firebase means local mode with demo friends and a bot.
 
 ## Setup
+Requires Node 20 and Chrome (or Edge).
 ```bash
+git clone https://github.com/phoebe-yw/HackTX-26.git
+cd HackTX-26
 npm install
 cp .env.example .env     # then paste keys (see below)
 npm run build            # → dist/chrome-mv3
@@ -22,10 +37,13 @@ For development with hot reload: `npm run dev` (WXT opens a Chrome profile with 
 | var | what |
 |---|---|
 | `WXT_GEMINI_API_KEY` | Gemini key (required for all AI; without it everything falls back to curated content) |
-| `WXT_GEMINI_MODEL` / `WXT_GEMINI_LITE_MODEL` | defaults `gemini-3.8-flash` / `gemini-3.5-flash-lite` |
+| `WXT_GEMINI_MODEL` / `WXT_GEMINI_LITE_MODEL` | defaults `gemini-3.8-flash` / `gemini-3.5-flash-lite`. If the main model is slow or overloaded, `gemini-3.6-flash` is a good choice |
 | `WXT_FIREBASE_*` | Firebase web config (optional; without it social runs in **local mode**: demo friends + bot opponent) |
 
-Keys are compiled into the local unpacked build only. `.env` is gitignored.
+Keys are compiled into the local unpacked build only. `.env` is gitignored. `.env` is read when the build starts, so restart `npm run dev` after editing it.
+
+### How Gemini calls stay reliable
+Each free-tier model has its own daily quota, so every call walks a ladder of Gemini Flash models (`src/ai/providers/gemini.ts`). A model that returns 429/503/404, times out (12 s cap per try) or answers empty is rested (using Google's stated retry delay when given) and the next model is tried. Screen checks and roasts use the lite models to save quota for Ask and the Study Room. If no model answers, the curated offline storybook replies and the badge says so.
 
 ### Firebase setup (for real friends / rooms / matchmaking) — ~5 minutes
 1. [console.firebase.google.com](https://console.firebase.google.com) → **Add project** (any name, Analytics off).
@@ -35,6 +53,12 @@ Keys are compiled into the local unpacked build only. `.env` is gitignored.
 5. `npm run build` → reload the extension. The Study Table badge flips from `local` to `live`.
 
 A second Chrome profile with the same build = a second user (anonymous auth is per profile). Share friend codes from the Study Table.
+
+Test-mode rules expire after 30 days. To keep it open to signed-in users only, set the Firestore rules to:
+```
+rules_version = '2';
+service cloud.firestore { match /databases/{db}/documents { match /{doc=**} { allow read, write: if request.auth != null; } } }
+```
 
 ## Demo Mode
 Options page (widget menu ☰ → Settings, or the toolbar popup) → **Demo & dev** → toggle **Demo Mode**:
@@ -66,8 +90,9 @@ src/ai/
   chain.ts / config.ts  fallback chain (preferred → gemini → curated), env + live overrides, provider logging
   prompts/ schemas.ts   provider-neutral prompts, zod schemas
 src/core/               types, storage, messaging, session, mood, engine, lockdown
-src/social/             backend.ts (base + LocalBackend) · firestore.ts · words.ts · bot.ts · client.ts
-src/ui/                 theme.css, CharacterArt (SVG placeholders w/ PNG override), widget pages, lockdown
+src/social/             backend.ts (base + LocalBackend) · firestore.ts · boardGames.ts (Tic-Tac-Toe / Connect Four rules + bot) · words.ts · bot.ts · client.ts
+src/data/               characters.ts (personalities + lines) · curated.ts (offline storybook) · demo.ts
+src/ui/                 theme.css, CharacterArt (SVG placeholders w/ PNG override), Markdown, widget pages, lockdown
 public/assets/characters/<id>/meta.json   art pipeline: drop PNGs, set hasArt:true
 ```
 
@@ -80,5 +105,8 @@ Screen peeking is **opt-in**, only during focus sessions, downscaled, never stor
 ## Replacing the placeholder art
 Draw transparent PNGs, **512×512**, character centered (~80% height, ~10% padding), facing slightly right, for `idle, happy, suspicious, annoyed, furious, sleeping, celebrate`. Drop them in `public/assets/characters/<id>/`, set `"hasArt": true` in that folder's `meta.json`, rebuild.
 
+## Built with
+TypeScript · React 19 · WXT (Chrome Manifest V3) · Gemini API (`@google/genai`) · Firebase Auth + Firestore · Zod · Vite
+
 ## Future work
-iPad/phone companion · Canvas/LMS goals · Gemini-generated custom pets · voice "quiz me" mode.
+Hand-drawn art for every character · study streaks and a storybook history of past sessions · class rooms hosted by a TA · more Tavern games · iPad/phone companion · Canvas/LMS goals · Gemini-generated custom pets · voice "quiz me" mode · Chrome Web Store release.

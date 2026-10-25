@@ -75,6 +75,7 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - Added Tic-Tac-Toe and Connect Four to the Tavern with a game picker.
 - Ask still fell back to "Offline storybook" when `gemini-3.8-flash` hung: a timeout had no HTTP status, so the model ladder gave up instead of trying the next model. Timeouts, network errors and empty replies now move down the ladder (that model rests 5 min), with one shared time budget per request.
 - Study Room still fell back (2:20am): `gemini-3.8-flash` and `gemini-3.7-flash` hang through the SDK while 3.6/3.5-flash answer in 2–7s, and two 20s hangs used the whole budget. Each try is now capped at 12s and a hung model rests 15 min. Verified against the live API: first request ~31s, later ones go straight to 3.6-flash. Setting `WXT_GEMINI_MODEL=gemini-3.6-flash` avoids the slow first request.
+- Gemini's Markdown showed as raw `*text*`. Ask and Study Room replies now render bold, italics, code, lists and headings (`src/ui/components/Markdown.tsx`, builds React nodes, no HTML injection).
 - Added three characters: Poseidon (pet name Trident), the Bat (Echo) and the Witch (Hazel). Each has SVG art for all 7 poses, a full set of lines, quotes and a `meta.json` for real art later. The welcome screen now lists every character.
 
 ## Known bugs / caveats
