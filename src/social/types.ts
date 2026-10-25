@@ -92,9 +92,19 @@ export interface GameChat {
   text: string;
   at: number;
 }
+export type GameKind = 'spellbound' | 'tictactoe' | 'connect4';
+
 export interface GameState {
   id: string;
+  /** Missing on games created before Tic-Tac-Toe / Connect Four existed → spellbound */
+  kind?: GameKind;
+  /** Spellbound only ('' for board games) */
   word: string;
+  /** Board games: row-major cells, 0 empty, 1 = players[0], 2 = players[1] */
+  cells?: number[];
+  /** Board games: index into players of whose move it is */
+  turn?: number;
+  winLine?: number[];
   players: GamePlayer[];
   status: 'playing' | 'finished';
   winnerUid: string | null;
@@ -118,6 +128,7 @@ export interface GameInvite {
   fromUid: string;
   fromName: string;
   gameId: string;
+  kind?: GameKind;
   at: number;
 }
 
@@ -151,11 +162,13 @@ export type SocialCmd =
   | { cmd: 'roomFlashcards'; notes?: string }
   | { cmd: 'roomQuiz' }
   // tavern
-  | { cmd: 'findStranger' }
+  | { cmd: 'findStranger'; kind?: GameKind }
   | { cmd: 'cancelFind' }
-  | { cmd: 'inviteFriendToGame'; uid: string }
+  | { cmd: 'inviteFriendToGame'; uid: string; kind?: GameKind }
   | { cmd: 'acceptInvite'; id: string }
   | { cmd: 'guess'; word: string }
+  /** Board games: cell (Tic-Tac-Toe) or column (Connect Four) */
+  | { cmd: 'move'; index: number }
   | { cmd: 'gameChat'; text: string }
   | { cmd: 'leaveGame' }
   | { cmd: 'addFriendFromGame' };

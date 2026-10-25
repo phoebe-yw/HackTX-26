@@ -16,9 +16,42 @@ const MODEL = (import.meta.env.WXT_GEMINI_MODEL as string | undefined) || 'gemin
 const LITE_MODEL =
   (import.meta.env.WXT_GEMINI_LITE_MODEL as string | undefined) || 'gemini-3.5-flash-lite';
 
+// Each model has its own free-tier daily quota, so when one is exhausted we move
+// down the ladder. Ids verified against the models list for our key (2026-10-25).
+const QUALITY_LADDER = dedupe([
+  MODEL,
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash',
+  LITE_MODEL,
+  'gemini-3.1-flash-lite',
+  'gemini-2.5-flash-lite',
+]);
+const FAST_LADDER = dedupe([LITE_MODEL, 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash']);
+
 let client: GoogleGenAI | null = null;
-/** When we get a 429 we pause this provider briefly so the fallback chain kicks in. */
-let cooldownUntil = 0;
+/** Per-model "don't call until" timestamps after 429 / 404 / 503. */
+const restingUntil = new Map<string, number>();
+
+function dedupe(xs: string[]): string[] {
+  return [...new Set(xs.filter(Boolean))];
+}
+
+/** How long to rest a model, from Google's "retry in 1h52m1.3s" / retryDelay "6721s". */
+function restMs(msg: string): number {
+  const delay = /retryDelay"?\s*:\s*"(\d+)s/.exec(msg);
+  if (delay) return Number(delay[1]) * 1000;
+  const human = /retry in ((?:\d+h)?(?:\d+m)?(?:[\d.]+s)?)/i.exec(msg)?.[1];
+  if (human) {
+    const h = Number(/(\d+)h/.exec(human)?.[1] ?? 0);
+    const m = Number(/(\d+)m/.exec(human)?.[1] ?? 0);
+    const s = Number(/([\d.]+)s/.exec(human)?.[1] ?? 0);
+    const total = (h * 3600 + m * 60 + s) * 1000;
+    if (total > 0) return total;
+  }
+  return 60_000;
+}
 
 function getClient(): GoogleGenAI {
   if (!API_KEY) throw new NotConfiguredError('gemini');
@@ -56,12 +89,43 @@ async function generate(
   messages: AiMessage[],
   options: ChatOptions & { jsonSchema?: Record<string, unknown> } = {},
 ): Promise<string> {
-  if (Date.now() < cooldownUntil) {
-    throw new ProviderError('gemini', 'cooling down after rate limit', 429);
+  const ladder = options.tier === 'fast' ? FAST_LADDER : QUALITY_LADDER;
+  const budget = (options.timeoutMs ?? 20_000) * 2;
+  // Overloaded models sometimes hang instead of returning 503; a healthy one answers in 2-6s
+  const perTry = Math.min(options.timeoutMs ?? 20_000, 12_000);
+  const deadline = Date.now() + budget;
+  let last: ProviderError | null = null;
+  for (const model of ladder) {
+    if (Date.now() < (restingUntil.get(model) ?? 0)) continue;
+    const remaining = deadline - Date.now();
+    if (remaining < 3_000) break;
+    try {
+      return await generateWith(model, messages, { ...options, timeoutMs: Math.min(perTry, remaining) });
+    } catch (err) {
+      if (!(err instanceof ProviderError)) throw err;
+      last = err;
+      // 400/401/403 mean the request or key is wrong; another model won't help
+      if (err.status === 400 || err.status === 401 || err.status === 403) throw err;
+      const rest =
+        err.status === 429 || err.status === 503
+          ? restMs(err.message)
+          : err.status === 404
+            ? 3600_000
+            : 15 * 60_000;
+      restingUntil.set(model, Date.now() + rest);
+      console.warn(`[gemini] ${model} unavailable (${err.status ?? err.message}), trying the next model`);
+    }
   }
+  throw last ?? new ProviderError('gemini', 'every model is resting after rate limits', 429);
+}
+
+async function generateWith(
+  model: string,
+  messages: AiMessage[],
+  options: ChatOptions & { jsonSchema?: Record<string, unknown> },
+): Promise<string> {
   const ai = getClient();
   const { system, contents } = toContents(messages);
-  const model = options.tier === 'fast' ? LITE_MODEL : MODEL;
   const timeoutMs = options.timeoutMs ?? 20_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -73,7 +137,8 @@ async function generate(
       config: {
         systemInstruction: system,
         temperature: options.temperature ?? 0.9,
-        maxOutputTokens: options.maxTokens ?? 1024,
+        // Thinking models spend output tokens before answering; prompts keep replies short
+        maxOutputTokens: Math.max(options.maxTokens ?? 1024, 2048),
         abortSignal: controller.signal,
         ...(options.jsonSchema
           ? { responseMimeType: 'application/json', responseJsonSchema: options.jsonSchema }
@@ -82,18 +147,21 @@ async function generate(
     });
     const text = res.text ?? '';
     if (!text) throw new ProviderError('gemini', 'empty response');
-    console.debug(`[gemini] ${model} ${Date.now() - t0}ms`);
+    console.info(`[gemini] ${model} ${Date.now() - t0}ms`);
     return text;
   } catch (err) {
     if (err instanceof ProviderError) throw err;
+    if (controller.signal.aborted) throw new ProviderError('gemini', `${model} timed out after ${timeoutMs}ms`, 408);
     const msg = err instanceof Error ? err.message : String(err);
     const status = /\b(429|RESOURCE_EXHAUSTED)\b/.test(msg)
       ? 429
-      : /\b(4\d\d|5\d\d)\b/.exec(msg)?.[0]
-        ? Number(/\b(4\d\d|5\d\d)\b/.exec(msg)![0])
-        : undefined;
-    if (status === 429) cooldownUntil = Date.now() + 30_000;
-    throw new ProviderError('gemini', msg.slice(0, 300), status);
+      : /\bNOT_FOUND\b/.test(msg)
+        ? 404
+        : /\b(4\d\d|5\d\d)\b/.exec(msg)?.[0]
+          ? Number(/\b(4\d\d|5\d\d)\b/.exec(msg)![0])
+          : undefined;
+    // Keep the whole message for 429s: the retry delay is near the end
+    throw new ProviderError('gemini', status === 429 ? msg : msg.slice(0, 300), status);
   } finally {
     clearTimeout(timer);
   }

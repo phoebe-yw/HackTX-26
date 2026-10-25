@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as store from '@/core/storage';
 import type { Settings } from '@/core/types';
-import { CHARACTERS } from '@/data/characters';
+import { CHARACTERS, CHARACTER_LIST } from '@/data/characters';
 import { CharacterArt } from '@/ui/components/CharacterArt';
 import { useStored } from '@/ui/hooks';
 import { DevPanel } from './DevPanel';
@@ -134,8 +134,8 @@ function Onboarding({ s, patch, onDone }: { s: Settings; patch: (p: Partial<Sett
               gates when things got out of hand.
             </p>
             <p className="muted">This takes about a minute. Every choice can be changed later.</p>
-            <div className="row" style={{ gap: 6 }}>
-              {(['red', 'cinderella', 'wolf', 'duck', 'humpty'] as const).map((id) => <CharacterArt key={id} id={id} pose="happy" size={64} />)}
+            <div className="row" style={{ gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {CHARACTER_LIST.map((c) => <CharacterArt key={c.id} id={c.id} pose="happy" size={64} />)}
             </div>
           </div>
         )}

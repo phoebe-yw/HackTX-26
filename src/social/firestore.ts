@@ -29,7 +29,8 @@ import * as store from '@/core/storage';
 import { uid } from '@/core/util';
 import { DEMO_FRIENDS } from '@/data/demo';
 import { SocialBackend, genCode } from './backend';
-import type { Friend, FriendRequest, GameInvite, GamePlayer, GameState, Me, Nudge, RoomState } from './types';
+import { boardMovePatch, initialGameFields } from './boardGames';
+import type { Friend, FriendRequest, GameInvite, GameKind, GamePlayer, GameState, Me, Nudge, RoomState } from './types';
 import { isValidGuess, randomWord, score } from './words';
 
 export interface FirebaseConfig {
@@ -305,6 +306,9 @@ export class FirestoreBackend extends SocialBackend {
         aiBusy: false,
         messages: arrayUnion({ id: uid(), uid: 'ai', name: 'Study Spirit', text: res.data, isAI: true, provider: res.provider, at: Date.now() }),
       });
+    } catch (e) {
+      console.warn('[social] group reply failed', e);
+      await updateDoc(doc(this.db, 'rooms', r.id), { aiBusy: false }).catch(() => {});
     } finally {
       this.aiReplyInFlight = false;
     }
@@ -381,9 +385,9 @@ export class FirestoreBackend extends SocialBackend {
   private myPlayer(): GamePlayer {
     return { uid: this.user.uid, name: this.me.name, characterId: this.me.characterId, guesses: [], solvedAt: null };
   }
-  private async createGameDoc(opponent: GamePlayer, opponentIsFriend: boolean, opponentTopic = ''): Promise<string> {
+  private async createGameDoc(kind: GameKind, opponent: GamePlayer, opponentIsFriend: boolean, opponentTopic = ''): Promise<string> {
     const game: Omit<GameState, 'id'> = {
-      word: randomWord(),
+      ...initialGameFields(kind, randomWord),
       players: [this.myPlayer(), opponent],
       status: 'playing',
       winnerUid: null,
@@ -399,10 +403,10 @@ export class FirestoreBackend extends SocialBackend {
     return ref.id;
   }
 
-  async findStranger() {
+  async findStranger(kind: GameKind) {
     const me = this.user.uid;
     await this.pushQueue({ status: 'waiting', since: Date.now(), message: 'Searching the tavern…' });
-    await setDoc(doc(this.db, 'queue', me), { uid: me, name: this.me.name, characterId: this.me.characterId, topic: this.settings.topic, status: 'waiting', at: Date.now(), gameId: null });
+    await setDoc(doc(this.db, 'queue', me), { uid: me, name: this.me.name, characterId: this.me.characterId, topic: this.settings.topic, kind, status: 'waiting', at: Date.now(), gameId: null });
 
     // Listen to my own queue doc: someone may match me.
     this.queueUnsub?.();
@@ -418,8 +422,10 @@ export class FirestoreBackend extends SocialBackend {
     });
 
     // Try to match with someone already waiting
-    const qs = await getDocs(query(collection(this.db, 'queue'), where('status', '==', 'waiting'), limit(10)));
-    const candidate = qs.docs.map((d) => d.data() as { uid: string; name: string; characterId: GamePlayer['characterId']; topic: string; at: number }).filter((c) => c.uid !== me && Date.now() - c.at < 2 * 60_000)[0];
+    const qs = await getDocs(query(collection(this.db, 'queue'), where('status', '==', 'waiting'), limit(25)));
+    const candidate = qs.docs
+      .map((d) => d.data() as { uid: string; name: string; characterId: GamePlayer['characterId']; topic: string; kind?: GameKind; at: number })
+      .filter((c) => c.uid !== me && (c.kind ?? 'spellbound') === kind && Date.now() - c.at < 2 * 60_000)[0];
     if (candidate) {
       try {
         const gameId = await runTransaction(this.db, async (tx) => {
@@ -429,7 +435,7 @@ export class FirestoreBackend extends SocialBackend {
           const gameRef = doc(collection(this.db, 'games'));
           const opponent: GamePlayer = { uid: candidate.uid, name: candidate.name, characterId: candidate.characterId ?? 'red', guesses: [], solvedAt: null };
           const game: Omit<GameState, 'id'> = {
-            word: randomWord(),
+            ...initialGameFields(kind, randomWord),
             players: [this.myPlayer(), opponent],
             status: 'playing',
             winnerUid: null,
@@ -458,7 +464,7 @@ export class FirestoreBackend extends SocialBackend {
       this.matchTimer = setTimeout(async () => {
         if (this.queue.status !== 'waiting') return;
         await this.cancelFind();
-        await this.startBotGame(false);
+        await this.startBotGame(kind, false);
       }, 6000);
     }
   }
@@ -473,15 +479,15 @@ export class FirestoreBackend extends SocialBackend {
     await deleteDoc(doc(this.db, 'queue', this.user.uid)).catch(() => {});
     await this.pushQueue({ status: 'idle', since: 0 });
   }
-  async inviteFriendToGame(to: string) {
+  async inviteFriendToGame(to: string, kind: GameKind) {
     if (to.startsWith('demo-')) {
-      await this.startBotGame(true);
+      await this.startBotGame(kind, true);
       return;
     }
     const f = this.friends.find((x) => x.uid === to);
     if (!f) return;
-    const gameId = await this.createGameDoc({ uid: f.uid, name: f.name, characterId: f.characterId, guesses: [], solvedAt: null }, true, f.topic);
-    await addDoc(collection(this.db, 'invites'), { from: this.user.uid, fromName: this.me.name, to, gameId, at: Date.now() });
+    const gameId = await this.createGameDoc(kind, { uid: f.uid, name: f.name, characterId: f.characterId, guesses: [], solvedAt: null }, true, f.topic);
+    await addDoc(collection(this.db, 'invites'), { from: this.user.uid, fromName: this.me.name, to, gameId, kind, at: Date.now() });
     this.watchGame(gameId);
     await this.pushQueue({ status: 'matched', since: Date.now(), message: `Waiting for ${f.name} to accept…` });
   }
@@ -524,6 +530,23 @@ export class FirestoreBackend extends SocialBackend {
           patch.winnerUid = solved[0]?.uid ?? null;
         }
         tx.update(ref, patch);
+      });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, message: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  async move(index: number) {
+    if (!this.game) return { ok: false, message: 'No game.' };
+    if (this.game.id.startsWith('local-')) return this.localMove(index);
+    const ref = doc(this.db, 'games', this.game.id);
+    const me = this.user.uid;
+    try {
+      await runTransaction(this.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const r = boardMovePatch(snap.data() as Omit<GameState, 'id'>, me, index);
+        if ('error' in r) throw new Error(r.error);
+        tx.update(ref, r.patch);
       });
       return { ok: true };
     } catch (e) {

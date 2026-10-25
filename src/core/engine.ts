@@ -262,10 +262,12 @@ export async function evaluate(tabOverride?: ActiveTabInfo | null): Promise<Mood
 
   // Schedule a screen check when it's useful: unknown site, or blocklisted
   // (so the roast can reference what's actually on screen).
+  // A page we already judged recently isn't re-checked until the verdict goes stale;
+  // a new page is checked on the next interval. Keeps demo mode from burning the daily quota.
   const interval = settings.demoMode ? 5_000 : 60_000;
   const wantsCheck =
     screenCheckAllowed(tab, settings) &&
-    (signal.source === 'none' || signal.source === 'blocklist' || signal.source === 'classifier' || signal.source === 'screen') &&
+    (signal.source === 'none' || signal.source === 'blocklist' || signal.source === 'classifier') &&
     now - lastScreenCheckAt >= interval;
   if (wantsCheck) void runScreenCheck();
 

@@ -2,7 +2,7 @@
 
 *A tiny fairytale companion that lives on your screen, keeps you locked in while you study, and turns your breaks into time with friends.* — HackTX '26, **#OnceUponAHack**
 
-Pick a character (Red Riding Hood, Cinderella, the Wolf, the Duck, Humpty Dumpty), tell it what you're studying, and it floats over every page. It cheers while you focus, gets *suspicious → annoyed → FURIOUS* when you drift, **sees your screen with Gemini** to roast you about what you're actually watching, and finally **locks the page down** until you pass a ridiculous challenge. On breaks, the Tavern opens: race a friend or a stranger at a fairytale word game, with an AI icebreaker, chat, and an add-friend button. A Group Study Room lets friends share one AI chat and conjure flashcards together.
+Pick a character (Red Riding Hood, Cinderella, the Wolf, the Duck, Humpty Dumpty, Poseidon, the Bat, the Witch), tell it what you're studying, and it floats over every page. It cheers while you focus, gets *suspicious → annoyed → FURIOUS* when you drift, **sees your screen with Gemini** to roast you about what you're actually watching, and finally **locks the page down** until you pass a ridiculous challenge. On breaks, the Tavern opens: pick Spellbound (a fairytale word race), Tic-Tac-Toe or Connect Four and play a friend or a stranger, with an AI icebreaker, chat, and an add-friend button. A Group Study Room lets friends share one AI chat and conjure flashcards together.
 
 ## Tracks
 - **Best Use of Gemini API** — Gemini is the pet's *eyes* and its *social brain*. `visionAI` sends a downscaled screenshot to Gemini Flash for structured-JSON focus detection, roasts that reference what's really on screen, and "👁️ look at my screen" Q&A. `socialAI` uses Gemini for the Group Study Room, shared flashcards/quizzes, break-time icebreakers, and friend challenges. The UI shows a badge when Gemini answered, and falls back to a curated offline storybook if it can't.
@@ -47,7 +47,7 @@ Options page (widget menu ☰ → Settings, or the toolbar popup) → **Demo & d
 2. **Begin the chapter** — the clock ticks, friends sit at the Study Table.
 3. Ask → toggle **👁️ look at my screen** → "explain this diagram" → Gemini answers from the screenshot.
 4. Open YouTube → suspicious → annoyed → FURIOUS with Gemini roasts about the video → **LOCKDOWN** storms in → solve the trial (ideally a friend's challenge) → glass-slipper unlock.
-5. Clock strikes → Break Tavern → Find someone → icebreaker → Spellbound race → add friend.
+5. Clock strikes → Break Tavern → pick a game (Spellbound, Tic-Tac-Toe, Connect Four) → Find someone → icebreaker → play → add friend.
 6. Ask → Group Study Room → conjure shared flashcards.
 
 ## Architecture

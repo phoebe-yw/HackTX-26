@@ -1,6 +1,6 @@
 // Shared data model. Changing anything here is a "data model change" (Working Agreement §5).
 
-export type CharacterId = 'red' | 'cinderella' | 'wolf' | 'duck' | 'humpty';
+export type CharacterId = 'red' | 'cinderella' | 'wolf' | 'duck' | 'humpty' | 'poseidon' | 'bat' | 'witch';
 
 export type Strictness = 'gentle' | 'firm' | 'wolf';
 

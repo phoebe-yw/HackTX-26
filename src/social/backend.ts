@@ -8,12 +8,14 @@ import type { MoodState, SessionState, Settings } from '@/core/types';
 import { uid } from '@/core/util';
 import { DEMO_FRIENDS, DEMO_STRANGER } from '@/data/demo';
 import { pick } from '@/data/characters';
+import { boardMovePatch, botMove, initialGameFields, isBoardKind } from './boardGames';
 import { BOT_LINES, botNextGuess } from './bot';
 import {
   SK,
   type Friend,
   type FriendRequest,
   type GameInvite,
+  type GameKind,
   type GameState,
   type Me,
   type Nudge,
@@ -157,15 +159,17 @@ export abstract class SocialBackend {
       case 'roomQuiz':
         return this.roomQuiz();
       case 'findStranger':
-        return this.findStranger();
+        return this.findStranger(c.kind ?? 'spellbound');
       case 'cancelFind':
         return this.cancelFind();
       case 'inviteFriendToGame':
-        return this.inviteFriendToGame(c.uid);
+        return this.inviteFriendToGame(c.uid, c.kind ?? 'spellbound');
       case 'acceptInvite':
         return this.acceptInvite(c.id);
       case 'guess':
         return this.guess(c.word.trim().toLowerCase());
+      case 'move':
+        return this.move(c.index);
       case 'gameChat':
         return this.gameChat(c.text.trim());
       case 'leaveGame':
@@ -187,11 +191,12 @@ export abstract class SocialBackend {
   abstract roomMessage(text: string): Promise<void>;
   abstract roomFlashcards(notes: string): Promise<void>;
   abstract roomQuiz(): Promise<void>;
-  abstract findStranger(): Promise<void>;
+  abstract findStranger(kind: GameKind): Promise<void>;
   abstract cancelFind(): Promise<void>;
-  abstract inviteFriendToGame(uid: string): Promise<void>;
+  abstract inviteFriendToGame(uid: string, kind: GameKind): Promise<void>;
   abstract acceptInvite(id: string): Promise<void>;
   abstract guess(word: string): Promise<{ ok: boolean; message?: string }>;
+  abstract move(index: number): Promise<{ ok: boolean; message?: string }>;
   abstract gameChat(text: string): Promise<void>;
   abstract leaveGame(): Promise<void>;
   abstract addFriendFromGame(): Promise<{ ok: boolean; message: string }>;
@@ -204,12 +209,11 @@ export abstract class SocialBackend {
   }
 
   /** Create a local game vs the demo bot. */
-  protected async startBotGame(opponentIsFriend = false) {
+  protected async startBotGame(kind: GameKind, opponentIsFriend = false) {
     this.stopBot();
-    const word = randomWord();
     const game: GameState = {
       id: 'local-' + uid(),
-      word,
+      ...initialGameFields(kind, randomWord),
       players: [
         { uid: this.me.uid, name: this.me.name, characterId: this.me.characterId, guesses: [], solvedAt: null },
         { uid: DEMO_STRANGER.uid, name: DEMO_STRANGER.name, characterId: DEMO_STRANGER.characterId, guesses: [], solvedAt: null, isBot: true },
@@ -230,13 +234,61 @@ export abstract class SocialBackend {
       this.game = { ...this.game, icebreaker: r.data, icebreakerProvider: r.provider };
       await this.pushGame();
     });
-    this.scheduleBotGuess();
+    // Board games: the human (players[0]) moves first, so the bot waits for them
+    if (!isBoardKind(kind)) this.scheduleBotGuess();
   }
 
   protected scheduleBotGuess() {
     this.stopBot();
     const delay = this.settings.demoMode ? 7000 + Math.random() * 3000 : 12000 + Math.random() * 6000;
     this.botTimer = setTimeout(() => void this.botTurn(), delay);
+  }
+
+  protected scheduleBotMove() {
+    this.stopBot();
+    this.botTimer = setTimeout(() => void this.botBoardTurn(), 700 + Math.random() * 900);
+  }
+
+  protected async botBoardTurn() {
+    const g = this.game;
+    if (!g || g.status !== 'playing' || !isBoardKind(g.kind)) return;
+    const seat = g.players.findIndex((p) => p.isBot);
+    if (seat < 0 || (g.turn ?? 0) !== seat) return;
+    this.applyBoardMove(g.players[seat].uid, botMove(g.kind, g.cells ?? [], seat + 1));
+    if (this.game?.status === 'playing' && Math.random() < 0.25) {
+      this.game = { ...this.game, chat: [...this.game.chat, { id: uid(), uid: g.players[seat].uid, name: g.players[seat].name, text: pick(BOT_LINES.move), at: Date.now() }] };
+    }
+    await this.pushGame();
+  }
+
+  /** Apply a board-game move to the in-memory game; returns an error message if illegal. */
+  protected applyBoardMove(playerUid: string, input: number): string | null {
+    const g = this.game;
+    if (!g) return 'No game in progress.';
+    const r = boardMovePatch(g, playerUid, input);
+    if ('error' in r) return r.error;
+    this.game = { ...g, ...r.patch };
+    if (this.game.status === 'finished') this.botSignOff();
+    return null;
+  }
+
+  /** The bot reacts in chat when a game against it ends. */
+  protected botSignOff() {
+    const g = this.game;
+    const bot = g?.players.find((p) => p.isBot);
+    if (!g || !bot) return;
+    const line = g.winnerUid === bot.uid ? pick(BOT_LINES.win) : g.winnerUid ? pick(BOT_LINES.lose) : 'A draw! Honour is satisfied.';
+    g.chat = [...g.chat, { id: uid(), uid: bot.uid, name: bot.name, text: line, at: Date.now() }];
+    this.stopBot();
+  }
+
+  /** Local (bot) board game: my move, then the bot answers. */
+  protected async localMove(index: number) {
+    const err = this.applyBoardMove(this.me.uid, index);
+    if (err) return { ok: false, message: err };
+    await this.pushGame();
+    if (this.game?.status === 'playing') this.scheduleBotMove();
+    return { ok: true };
   }
   protected stopBot() {
     if (this.botTimer) clearTimeout(this.botTimer);
@@ -267,12 +319,7 @@ export abstract class SocialBackend {
     if (solved.length || allDone) {
       g.status = 'finished';
       g.winnerUid = solved[0]?.uid ?? null;
-      const bot = g.players.find((p) => p.isBot);
-      if (bot) {
-        const botWon = g.winnerUid === bot.uid;
-        g.chat = [...g.chat, { id: uid(), uid: bot.uid, name: bot.name, text: pick(botWon ? BOT_LINES.win : BOT_LINES.lose), at: Date.now() }];
-      }
-      this.stopBot();
+      this.botSignOff();
     }
   }
 
@@ -393,19 +440,22 @@ export class LocalBackend extends SocialBackend {
     this.room = { ...this.room, aiBusy: false, quiz: r.data, quizProvider: r.provider };
     await this.pushRoom();
   }
-  async findStranger() {
+  async findStranger(kind: GameKind) {
     await this.pushQueue({ status: 'waiting', since: Date.now(), message: 'Searching the tavern…' });
     setTimeout(() => {
-      if (this.queue.status === 'waiting') void this.startBotGame(false);
+      if (this.queue.status === 'waiting') void this.startBotGame(kind, false);
     }, this.settings.demoMode ? 2500 : 4000);
   }
   async cancelFind() {
     await this.pushQueue({ status: 'idle', since: 0 });
   }
-  async inviteFriendToGame() {
-    await this.startBotGame(true);
+  async inviteFriendToGame(_uid: string, kind: GameKind) {
+    await this.startBotGame(kind, true);
   }
   async acceptInvite() {}
+  async move(index: number) {
+    return this.localMove(index);
+  }
   async guess(word: string) {
     const err = this.applyGuess(this.me.uid, word);
     if (err) return { ok: false, message: err };

@@ -83,6 +83,7 @@ function Face({
   eyeColor = '#3D2E1A',
   cheek = '#e89aa5',
   mouth = true,
+  lineColor,
 }: {
   cx: number;
   cy: number;
@@ -92,8 +93,11 @@ function Face({
   cheek?: string;
   /** Characters with a beak/bill draw their own mouth */
   mouth?: boolean;
+  /** Brows + mouth colour, for dark-furred faces (defaults to eyeColor) */
+  lineColor?: string;
 }) {
   const s = scale;
+  const ink = lineColor ?? eyeColor;
   const ex = 9 * s; // eye offset
   const ey = -2 * s;
   const eyeR = 3.2 * s;
@@ -129,18 +133,18 @@ function Face({
   const bw = 2.2 * s;
   if (mood === 'suspicious') {
     elems.push(
-      <path key="lb" d={`M${cx - ex - 4 * s},${cy + ey - 7 * s} l${8 * s},${-2.5 * s}`} stroke={eyeColor} strokeWidth={bw} strokeLinecap="round" />,
-      <path key="rb" d={`M${cx + ex - 4 * s},${cy + ey - 6 * s} l${8 * s},${1 * s}`} stroke={eyeColor} strokeWidth={bw} strokeLinecap="round" />,
+      <path key="lb" d={`M${cx - ex - 4 * s},${cy + ey - 7 * s} l${8 * s},${-2.5 * s}`} stroke={ink} strokeWidth={bw} strokeLinecap="round" />,
+      <path key="rb" d={`M${cx + ex - 4 * s},${cy + ey - 6 * s} l${8 * s},${1 * s}`} stroke={ink} strokeWidth={bw} strokeLinecap="round" />,
     );
   } else if (mood === 'annoyed') {
     elems.push(
-      <path key="lb" d={`M${cx - ex - 4 * s},${cy + ey - 6.5 * s} l${8 * s},${0}`} stroke={eyeColor} strokeWidth={bw} strokeLinecap="round" />,
-      <path key="rb" d={`M${cx + ex - 4 * s},${cy + ey - 6.5 * s} l${8 * s},${0}`} stroke={eyeColor} strokeWidth={bw} strokeLinecap="round" />,
+      <path key="lb" d={`M${cx - ex - 4 * s},${cy + ey - 6.5 * s} l${8 * s},${0}`} stroke={ink} strokeWidth={bw} strokeLinecap="round" />,
+      <path key="rb" d={`M${cx + ex - 4 * s},${cy + ey - 6.5 * s} l${8 * s},${0}`} stroke={ink} strokeWidth={bw} strokeLinecap="round" />,
     );
   } else if (mood === 'furious') {
     elems.push(
-      <path key="lb" d={`M${cx - ex - 4.5 * s},${cy + ey - 8.5 * s} l${9 * s},${4 * s}`} stroke={eyeColor} strokeWidth={bw * 1.2} strokeLinecap="round" />,
-      <path key="rb" d={`M${cx + ex - 4.5 * s},${cy + ey - 4.5 * s} l${9 * s},${-4 * s}`} stroke={eyeColor} strokeWidth={bw * 1.2} strokeLinecap="round" />,
+      <path key="lb" d={`M${cx - ex - 4.5 * s},${cy + ey - 8.5 * s} l${9 * s},${4 * s}`} stroke={ink} strokeWidth={bw * 1.2} strokeLinecap="round" />,
+      <path key="rb" d={`M${cx + ex - 4.5 * s},${cy + ey - 4.5 * s} l${9 * s},${-4 * s}`} stroke={ink} strokeWidth={bw * 1.2} strokeLinecap="round" />,
       // steam puffs
       <g key="steam" fill="#fff" opacity={0.9}>
         <circle cx={cx - 22 * s} cy={cy - 16 * s} r={3 * s} />
@@ -164,22 +168,22 @@ function Face({
   if (!mouth) return <g>{elems}</g>;
   switch (mood) {
     case 'happy':
-      elems.push(<path key="m" d={`M${cx - 5 * s},${my} q${5 * s},${5 * s} ${10 * s},0`} stroke={eyeColor} strokeWidth={2 * s} fill="none" strokeLinecap="round" />);
+      elems.push(<path key="m" d={`M${cx - 5 * s},${my} q${5 * s},${5 * s} ${10 * s},0`} stroke={ink} strokeWidth={2 * s} fill="none" strokeLinecap="round" />);
       break;
     case 'celebrate':
-      elems.push(<path key="m" d={`M${cx - 7 * s},${my - 1} q${7 * s},${9 * s} ${14 * s},0 z`} fill="#7a2a3a" stroke={eyeColor} strokeWidth={1.5 * s} />);
+      elems.push(<path key="m" d={`M${cx - 7 * s},${my - 1} q${7 * s},${9 * s} ${14 * s},0 z`} fill="#7a2a3a" stroke={ink} strokeWidth={1.5 * s} />);
       break;
     case 'suspicious':
-      elems.push(<path key="m" d={`M${cx - 4 * s},${my + 1} l${8 * s},${-1.5 * s}`} stroke={eyeColor} strokeWidth={2 * s} strokeLinecap="round" />);
+      elems.push(<path key="m" d={`M${cx - 4 * s},${my + 1} l${8 * s},${-1.5 * s}`} stroke={ink} strokeWidth={2 * s} strokeLinecap="round" />);
       break;
     case 'annoyed':
-      elems.push(<path key="m" d={`M${cx - 5 * s},${my + 2} q${5 * s},${-4 * s} ${10 * s},0`} stroke={eyeColor} strokeWidth={2 * s} fill="none" strokeLinecap="round" />);
+      elems.push(<path key="m" d={`M${cx - 5 * s},${my + 2} q${5 * s},${-4 * s} ${10 * s},0`} stroke={ink} strokeWidth={2 * s} fill="none" strokeLinecap="round" />);
       break;
     case 'furious':
-      elems.push(<path key="m" d={`M${cx - 6 * s},${my} q${6 * s},${-2 * s} ${12 * s},0 q${-6 * s},${8 * s} ${-12 * s},0 z`} fill="#7a2a3a" stroke={eyeColor} strokeWidth={1.5 * s} />);
+      elems.push(<path key="m" d={`M${cx - 6 * s},${my} q${6 * s},${-2 * s} ${12 * s},0 q${-6 * s},${8 * s} ${-12 * s},0 z`} fill="#7a2a3a" stroke={ink} strokeWidth={1.5 * s} />);
       break;
     case 'sleeping':
-      elems.push(<circle key="m" cx={cx} cy={my + 1} r={1.6 * s} fill={eyeColor} />);
+      elems.push(<circle key="m" cx={cx} cy={my + 1} r={1.6 * s} fill={ink} />);
       break;
   }
   return <g>{elems}</g>;
@@ -346,6 +350,133 @@ function renderBody(id: CharacterId, pose: Pose) {
           {furious && <path d="M64 22 l-4 7 l5 4 l-5 7" fill="none" stroke="#3D2E1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
           <Face cx={50} cy={40} mood={mood} />
           {mood === 'celebrate' && <Sparkles cx={50} cy={40} />}
+        </g>
+      );
+    case 'poseidon':
+      return (
+        <g>
+          {/* trident (behind the arm, in front of the robe) */}
+          <path d="M82 96 V16" stroke="#3D2E1A" strokeWidth="6" strokeLinecap="round" />
+          <path d="M82 96 V16" stroke="#D9B44A" strokeWidth="3" strokeLinecap="round" />
+          <path d="M72 8 v10 q10 8 20 0 v-10" fill="none" stroke="#3D2E1A" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M72 8 v10 q10 8 20 0 v-10" fill="none" stroke="#D9B44A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M82 22 V4" stroke="#3D2E1A" strokeWidth="6" strokeLinecap="round" />
+          <path d="M82 22 V4" stroke="#D9B44A" strokeWidth="3" strokeLinecap="round" />
+          <g fill="#D9B44A" stroke="#3D2E1A" strokeWidth="1.2" strokeLinejoin="round">
+            <path d="M69 9 l3 -7 l3 7 z" />
+            <path d="M79 5 l3 -7 l3 7 z" />
+            <path d="M89 9 l3 -7 l3 7 z" />
+          </g>
+          {furious && (
+            <g stroke="#F0D78A" strokeWidth="2" strokeLinecap="round">
+              <path d="M64 6 l-5 -3 M100 6 l-5 3 M66 18 l-6 1 M98 18 l6 1" />
+            </g>
+          )}
+          {/* robe */}
+          <path d="M20 96 C 22 72, 34 62, 48 60 C 62 62, 74 72, 76 96 Z" fill="#8EB9CC" stroke="#3D2E1A" strokeWidth="2.5" />
+          <path d="M30 66 L 66 92" stroke="#D9B44A" strokeWidth="4" strokeLinecap="round" />
+          {/* hand on the trident */}
+          <circle cx="80" cy="64" r="5" fill="#f7d9c4" stroke="#3D2E1A" strokeWidth="2" />
+          {/* hair */}
+          <path d="M28 40 q-4 -18 10 -24 q10 -6 20 0 q14 6 10 24 z" fill="#eef4f5" stroke="#3D2E1A" strokeWidth="2.2" />
+          {/* face */}
+          <ellipse cx="48" cy="38" rx="17" ry="18" fill="#f7d9c4" stroke="#3D2E1A" strokeWidth="2.5" />
+          {/* sea-foam beard */}
+          <path d="M31 42 C 30 60, 40 72, 48 78 C 56 72, 66 60, 65 42 C 60 50, 54 52, 48 52 C 42 52, 36 50, 31 42 Z" fill="#eef4f5" stroke="#3D2E1A" strokeWidth="2.2" strokeLinejoin="round" />
+          <path d="M40 60 q3 4 0 8 M48 62 q3 4 0 9 M56 60 q3 4 0 8" fill="none" stroke="#8EB9CC" strokeWidth="1.6" strokeLinecap="round" />
+          {/* crown */}
+          <path d="M34 22 l3 -9 l5 6 l6 -10 l6 10 l5 -6 l3 9 z" fill="#D9B44A" stroke="#3D2E1A" strokeWidth="1.8" strokeLinejoin="round" />
+          <Face cx={48} cy={36} mood={mood} scale={0.85} />
+          {/* waves */}
+          <path d="M2 92 q8 -8 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 V100 H2 Z" fill="#5f9db5" stroke="#3D2E1A" strokeWidth="2" strokeLinejoin="round" />
+          {furious && (
+            <g fill="#eef4f5" stroke="#3D2E1A" strokeWidth="1">
+              <circle cx="10" cy="80" r="2.5" />
+              <circle cx="20" cy="74" r="2" />
+              <circle cx="90" cy="82" r="2.5" />
+            </g>
+          )}
+          {mood === 'celebrate' && <Sparkles cx={48} cy={40} />}
+        </g>
+      );
+    case 'bat':
+      return (
+        <g>
+          {/* wings */}
+          <g fill="#4A3B22" stroke="#2a1f10" strokeWidth="2" strokeLinejoin="round">
+            <path d={furious ? 'M40 56 C 30 30, 12 22, 2 26 C 6 34, 6 42, 4 50 C 10 46, 16 48, 18 54 C 22 48, 28 50, 30 56 C 34 52, 38 54, 40 58 Z' : 'M40 56 C 30 38, 14 32, 4 38 C 8 46, 8 54, 6 62 C 12 58, 18 60, 20 66 C 24 60, 30 62, 32 68 C 36 62, 38 62, 40 64 Z'} />
+            <path d={furious ? 'M60 56 C 70 30, 88 22, 98 26 C 94 34, 94 42, 96 50 C 90 46, 84 48, 82 54 C 78 48, 72 50, 70 56 C 66 52, 62 54, 60 58 Z' : 'M60 56 C 70 38, 86 32, 96 38 C 92 46, 92 54, 94 62 C 88 58, 82 60, 80 66 C 76 60, 70 62, 68 68 C 64 62, 62 62, 60 64 Z'} />
+          </g>
+          {/* body + cream chest tuft */}
+          <ellipse cx="50" cy="68" rx="14" ry="17" fill="#4A3B22" stroke="#2a1f10" strokeWidth="2" />
+          <path d="M43 56 l7 9 l7 -9 q-7 4 -14 0 z" fill="#F3ECD8" />
+          {/* feet */}
+          <path d="M44 84 l-2 6 M48 85 l0 6 M52 85 l0 6 M56 84 l2 6" stroke="#2a1f10" strokeWidth="2" strokeLinecap="round" />
+          {/* ears */}
+          <path d="M36 32 L 30 8 L 47 26 Z" fill="#4A3B22" stroke="#2a1f10" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M64 32 L 70 8 L 53 26 Z" fill="#4A3B22" stroke="#2a1f10" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M37 28 L 33 14 L 44 25 Z" fill="#F3ECD8" />
+          <path d="M63 28 L 67 14 L 56 25 Z" fill="#F3ECD8" />
+          {/* head */}
+          <circle cx="50" cy="40" r="17" fill="#4A3B22" stroke="#2a1f10" strokeWidth="2" />
+          {/* big white eyes (the shared face draws the pupils) */}
+          {mood !== 'sleeping' && mood !== 'celebrate' && (
+            <g fill="#fbf8ee">
+              <ellipse cx="42.4" cy="38.3" rx="5" ry="5.2" />
+              <ellipse cx="57.6" cy="38.3" rx="5" ry="5.2" />
+            </g>
+          )}
+          {/* closed eyes sit on dark fur, so they're drawn light */}
+          <Face cx={50} cy={40} mood={mood} scale={0.85} eyeColor={mood === 'sleeping' || mood === 'celebrate' ? '#F3ECD8' : '#3D2E1A'} lineColor="#F3ECD8" cheek="#c97a86" />
+          {/* fangs */}
+          <path d="M46 46.5 l1.4 3 l1.4 -3 z M51.2 46.5 l1.4 3 l1.4 -3 z" fill="#fbf8ee" />
+          {/* star wand */}
+          <path d="M62 78 L 84 56" stroke="#3D2E1A" strokeWidth="5" strokeLinecap="round" />
+          <path d="M62 78 L 84 56" stroke="#D9B44A" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="62" cy="77" r="3.5" fill="#4A3B22" stroke="#2a1f10" strokeWidth="1.5" />
+          <path d="M86 46 l2.6 5.6 l6 .6 l-4.5 4 l1.3 6 l-5.4 -3.1 l-5.4 3.1 l1.3 -6 l-4.5 -4 l6 -.6 z" fill="#F0D78A" stroke="#3D2E1A" strokeWidth="1.5" strokeLinejoin="round" />
+          {(mood === 'happy' || mood === 'celebrate') && (
+            <g fill="#D9B44A">
+              <path d="M76 36 l1.5 3.5 l3.5 1.5 l-3.5 1.5 l-1.5 3.5 l-1.5 -3.5 l-3.5 -1.5 l3.5 -1.5 z" />
+              <path d="M94 34 l1 2.4 l2.4 1 l-2.4 1 l-1 2.4 l-1 -2.4 l-2.4 -1 l2.4 -1 z" />
+            </g>
+          )}
+          {mood === 'celebrate' && <Sparkles cx={50} cy={46} />}
+        </g>
+      );
+    case 'witch':
+      return (
+        <g>
+          {/* cloak */}
+          <path d="M22 96 C 24 74, 34 62, 50 60 C 66 62, 76 74, 78 96 Z" fill="#2F3A2A" stroke="#3D2E1A" strokeWidth="2.5" />
+          <path d="M42 62 L 50 72 L 58 62" fill="#A3304A" stroke="#3D2E1A" strokeWidth="1.8" strokeLinejoin="round" />
+          <path d="M50 74 l1.6 3.4 l3.7 .4 l-2.8 2.5 l.8 3.6 l-3.3 -1.9 l-3.3 1.9 l.8 -3.6 l-2.8 -2.5 l3.7 -.4 z" fill="#D9B44A" stroke="#3D2E1A" strokeWidth="1" />
+          {/* hair */}
+          <path d="M31 34 C 24 46, 26 58, 32 64 C 34 56, 34 48, 36 42 Z M69 34 C 76 46, 74 58, 68 64 C 66 56, 66 48, 64 42 Z" fill="#A3304A" stroke="#3D2E1A" strokeWidth="2" strokeLinejoin="round" />
+          {/* face */}
+          <ellipse cx="50" cy="44" rx="17" ry="17" fill="#cfe0b4" stroke="#3D2E1A" strokeWidth="2.5" />
+          {/* hat */}
+          <path d="M31 30 C 40 24, 46 14, 50 2 C 54 8, 60 6, 64 2 C 60 10, 58 20, 69 30 Z" fill="#5B6236" stroke="#3D2E1A" strokeWidth="2.5" strokeLinejoin="round" />
+          <ellipse cx="50" cy="31" rx="29" ry="6" fill="#5B6236" stroke="#3D2E1A" strokeWidth="2.5" />
+          <path d="M34 27 q16 5 32 0 l1 4 q-17 5 -34 0 z" fill="#A3304A" stroke="#3D2E1A" strokeWidth="1.5" />
+          <rect x="46" y="26.5" width="8" height="6.5" rx="1" fill="none" stroke="#D9B44A" strokeWidth="2" />
+          <Face cx={50} cy={45} mood={mood} scale={0.85} cheek="#e89aa5" />
+          {/* pointy nose */}
+          <path d="M50 44 l3.5 5 l-4 .6" fill="#bcd29e" stroke="#3D2E1A" strokeWidth="1.4" strokeLinejoin="round" />
+          {/* cauldron */}
+          <g transform="translate(82 84)">
+            {(furious || mood === 'celebrate' || mood === 'annoyed') && (
+              <g fill="#a6d38a" stroke="#3D2E1A" strokeWidth="1">
+                <circle cx="-3" cy={furious ? -16 : -11} r={furious ? 3.5 : 2.5} />
+                <circle cx="4" cy={furious ? -22 : -15} r={furious ? 2.8 : 2} />
+                {furious && <circle cx="-1" cy="-28" r="2" />}
+              </g>
+            )}
+            <ellipse cx="0" cy="-6" rx="11" ry="3" fill="#a6d38a" stroke="#3D2E1A" strokeWidth="1.5" />
+            <path d="M-11 -6 C -13 6, 13 6, 11 -6 Z" fill="#3D2E1A" />
+            <path d="M-8 4 l-2 4 M8 4 l2 4" stroke="#3D2E1A" strokeWidth="2" strokeLinecap="round" />
+          </g>
+          {mood === 'celebrate' && <Sparkles cx={50} cy={44} />}
         </g>
       );
   }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Settings } from '@/core/types';
 import { fmtDuration } from '@/core/util';
+import { GAME_INFO } from '@/social/boardGames';
 import { CHARACTERS } from '@/data/characters';
 import { social } from '@/social/client';
 import { SK, type Friend, type FriendRequest, type GameInvite, type Me, type Nudge } from '@/social/types';
@@ -104,7 +105,7 @@ export function TablePage({ settings, onOpenTavern }: { settings: Settings; onOp
           {invites.map((i) => (
             <div className="friend-row" key={i.id}>
               <span>🎲</span>
-              <div style={{ flex: 1 }}><b>{i.fromName}</b> <span className="small muted">challenges you to Spellbound</span></div>
+              <div style={{ flex: 1 }}><b>{i.fromName}</b> <span className="small muted">challenges you to {GAME_INFO[i.kind ?? 'spellbound'].name}</span></div>
               <button className="btn sm primary" onClick={async () => { await social({ cmd: 'acceptInvite', id: i.id }); onOpenTavern(); }}>Play</button>
             </div>
           ))}
@@ -137,7 +138,7 @@ export function TablePage({ settings, onOpenTavern }: { settings: Settings; onOp
           </div>
           <button className="btn sm icon" title="Nudge" onClick={() => { void social({ cmd: 'nudge', uid: f.uid }); setMsg(`You nudged ${f.name}.`); }}>👋</button>
           <button className="btn sm icon" title="Send a challenge (shows up in their next lockdown)" onClick={() => setChallengeFor(f)}>⚔️</button>
-          <button className="btn sm icon" title="Invite to Spellbound" onClick={async () => { await social({ cmd: 'inviteFriendToGame', uid: f.uid }); onOpenTavern(); }}>🎲</button>
+          <button className="btn sm icon" title="Pick a game to play in the Tavern" onClick={onOpenTavern}>🎲</button>
         </div>
       ))}
 

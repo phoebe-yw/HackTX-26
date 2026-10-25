@@ -40,7 +40,7 @@ export async function groupReply(
         timeoutMs: 20_000,
         maxTokens: 400,
       }),
-    () => pick(GROUP_REPLIES),
+    () => `${pick(GROUP_REPLIES)} (Gemini didn't answer just now, probably the free-tier rate limit. Ask again in a minute.)`,
   );
 }
 

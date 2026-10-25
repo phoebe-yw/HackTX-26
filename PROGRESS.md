@@ -26,7 +26,7 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - ✅ Collapsed state: character + timer ring; click to expand
 - ✅ Sizes S/M/L; hide on this site; disable (with guilt-trip line mid-session)
 - ✅ Widget pages: Home · Study Table · Ask · Quotes · Break Tavern (tavern locked during focus)
-- ✅ Onboarding (character, name, topic, method, strictness, sites, screen opt-in)
+- ✅ Onboarding (character, name, topic, method, strictness, sites, screen opt-in); 8 characters
 - ✅ Session timer on `chrome.alarms` + storage; synced across tabs; widget backstop for demo-second phases
 - ✅ Cinderella clock with strike animation at phase change
 - ✅ Mood machine Happy→Suspicious→Annoyed→FURIOUS→LOCKDOWN with strictness curves, per-character lines
@@ -45,7 +45,7 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - 🟡 Friends add/accept (`requests/`), presence heartbeat every 30s, Study Table live (`in` query on friend uids)
 - 🟡 Nudge (`nudges/`), send challenge (AI-generated or own; `challenges/`) → delivered into the friend's next lockdown
 - 🟡 Group Study Room: room codes, shared chat, host-generated AI replies, shared flashcards + quiz, provider badge
-- 🟡 Break Tavern: Spellbound race (shared word, 6 guesses, opponent tiles hidden until the end), stranger queue + transaction match, friend invites, chat, AI icebreaker, add friend; bot stranger after 6s in Demo Mode / instantly in local mode
+- 🟡 Break Tavern: game picker with Spellbound race (shared word, 6 guesses, opponent tiles hidden until the end), Tic-Tac-Toe and Connect Four (turn-based, moves in a Firestore transaction, `src/social/boardGames.ts`); stranger queue matches players who picked the same game; friend invites, chat, AI icebreaker, add friend; bot stranger (plays all three) after 6s in Demo Mode / instantly in local mode
 - ✅ Local mode (no Firebase): demo friends, bot opponent, solo room with the AI — the demo works offline
 
 ### Pre-cuts agreed (Q18) — do only if ahead
@@ -69,6 +69,13 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - Widget vanishing on tabs: re-injected into open tabs on install/update (`scripting`), anchored to `<html>` instead of `<body>`, re-attached if a page removes it, and key presses no longer leak to page shortcuts.
 - Page-flip animation replaced with a short fade.
 - Duck had a bill and a drawn mouth; the bill is now the mouth and changes with mood.
+
+## Fixed Sun 12:30am
+- Ask / Study Room gave non-answers. Two causes: (1) free tier allows only 20 requests/day on `gemini-3.8-flash` and Demo Mode's 5s screen checks used it up, so everything fell back to canned lines; (2) the character prompt capped replies at "1–2 sentences, funny". Now: Gemini steps down a ladder of models (each has its own daily quota) and rests a model for Google's stated retry time; screen checks and roasts use the lite ladder; a page that was just judged isn't re-checked until the verdict is stale; Ask uses a tutor-first prompt; fallbacks say Gemini didn't answer instead of pretending.
+- Added Tic-Tac-Toe and Connect Four to the Tavern with a game picker.
+- Ask still fell back to "Offline storybook" when `gemini-3.8-flash` hung: a timeout had no HTTP status, so the model ladder gave up instead of trying the next model. Timeouts, network errors and empty replies now move down the ladder (that model rests 5 min), with one shared time budget per request.
+- Study Room still fell back (2:20am): `gemini-3.8-flash` and `gemini-3.7-flash` hang through the SDK while 3.6/3.5-flash answer in 2–7s, and two 20s hangs used the whole budget. Each try is now capped at 12s and a hung model rests 15 min. Verified against the live API: first request ~31s, later ones go straight to 3.6-flash. Setting `WXT_GEMINI_MODEL=gemini-3.6-flash` avoids the slow first request.
+- Added three characters: Poseidon (pet name Trident), the Bat (Echo) and the Witch (Hazel). Each has SVG art for all 7 poses, a full set of lines, quotes and a `meta.json` for real art later. The welcome screen now lists every character.
 
 ## Known bugs / caveats
 - `chrome.alarms` minimum granularity is 30s; demo-second phases rely on the widget backstop (works whenever a tab with the widget is visible).

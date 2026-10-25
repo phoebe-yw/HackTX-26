@@ -32,6 +32,24 @@ export const QUOTES: Record<CharacterId, string[]> = {
     'The wall is tall. So are you. Metaphorically.',
     'Fragile things can still be brave.',
   ],
+  poseidon: [
+    'Calm seas never made a skilled sailor. Keep rowing.',
+    'The tide comes in one wave at a time. So does knowledge.',
+    'Even the ocean was once a single drop.',
+    'Steer the ship. Do not let the current steer you.',
+  ],
+  bat: [
+    'The night is long, but so is your attention span. Use it.',
+    'Listen closely: every chapter echoes into the exam.',
+    'Even in the dark, you know which way to fly.',
+    'Hang in there. Upside down if you must.',
+  ],
+  witch: [
+    'Every great potion starts with one boring ingredient. Add it.',
+    'Focus is the only spell that never wears off.',
+    'Stir slowly. Good brews and good grades take time.',
+    'A witch never skips the reading. The spellbook knows.',
+  ],
 };
 
 export const RIDDLES: RiddleChallenge[] = [

@@ -21,6 +21,7 @@ export function botNextGuess(prev: Guess[], answer: string): string {
 export const BOT_LINES = {
   greet: ['Hark! A fellow traveler. Shall we race?', 'Ah, another scholar on break. Prepare to lose.', '*adjusts cloak* Spellbound, is it? Lovely.'],
   guess: ['Hmm, runes…', 'My quill trembles.', 'That one felt right.', 'The letters mock me.'],
+  move: ['Your move, scholar.', 'Bold. Very bold.', 'I saw that coming.', 'Hmm… interesting.', 'The board favours the patient.'],
   win: ['Victory! The tavern keeper owes me a drink.', 'Spell broken. Better luck next break.'],
   lose: ['Well played, scholar. Well played.', 'You bested me. Shall we be friends?'],
   reply: [

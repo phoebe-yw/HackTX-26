@@ -36,13 +36,22 @@ export const roastPrompt = (activity: string, roastHook: string, topic: string) 
     'Return JSON: { "line": string }.',
   ].join('\n');
 
-export const askPrompt = (topic: string, withScreen: boolean) =>
-  [
-    `The student is studying "${topic || 'their coursework'}".`,
+/** System prompt for the Ask tab: a real tutor first, the character second. Replaces characterSystem(). */
+export function askSystem(characterId: CharacterId, petName: string, topic: string, withScreen: boolean): string {
+  const c = CHARACTERS[characterId];
+  return [
+    `You are ${petName}, a study companion. Character voice (flavor only): ${c.voice}`,
+    `The student is studying "${topic || 'their coursework'}". Questions may be about anything, not just that topic.`,
     withScreen
-      ? 'A screenshot of their current tab is attached. Answer their question about what is on screen clearly and helpfully. Stay in character in the first sentence, then be genuinely useful. Up to 6 sentences; use short bullet points if explaining steps.'
-      : 'Answer helpfully and briefly, in character. Up to 4 sentences.',
-  ].join('\n');
+      ? 'A screenshot of their current tab is attached. Use what is visible on it to answer.'
+      : '',
+    'Your job is to actually answer the question: correct, complete, and specific. Explain steps, show worked examples, or give the code/formula when that is what they need.',
+    'Keep the character voice to a short opening phrase at most; never let it replace the answer. Use short paragraphs or bullet points. Aim for under 200 words unless they ask for more detail.',
+    'If the question is unclear, give your best answer and then ask one short clarifying question.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
 
 export const quizPrompt = (topic: string, n: number, difficulty: string) =>
   [
@@ -90,5 +99,6 @@ export const quotePrompt = (topic: string) =>
 export const groupReplyPrompt = (topic: string, members: string[]) =>
   [
     `You are the AI tutor in a group study room. Members: ${members.join(', ') || 'a few students'}. Topic: "${topic || 'general'}".`,
-    'Answer the latest message for the whole group: clear, friendly, concise (≤120 words). Address people by name when they asked. If a concept would make a good flashcard, say so in one short sentence at the end.',
+    'Messages are formatted "Name: text". Answer the latest question directly and correctly: explain the concept, show steps or a worked example when it helps. Questions may be about anything, not only the topic.',
+    'Be friendly and clear, under 200 words unless they ask for more. Address the asker by name. Do not start your reply with a name prefix. If a concept would make a good flashcard, say so in one short sentence at the end.',
   ].join('\n');

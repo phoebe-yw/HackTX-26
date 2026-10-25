@@ -34,7 +34,7 @@ export async function checkScreen(
           },
         ],
         ScreenCheckSchema,
-        { temperature: 0.2, timeoutMs: 12_000, maxTokens: 200 },
+        { tier: 'fast', temperature: 0.2, timeoutMs: 12_000, maxTokens: 200 },
       ),
     () => null, // no offline answer for vision: caller treats null as "unknown"
   );
@@ -74,7 +74,7 @@ export async function roast(
           { role: 'user', content: P.roastPrompt(activity, roastHook, ctx.topic) },
         ],
         LineSchema,
-        { temperature: 1.0, timeoutMs: 8_000, maxTokens: 120 },
+        { tier: 'fast', temperature: 1.0, timeoutMs: 8_000, maxTokens: 120 },
       );
       return r.line;
     },
@@ -94,19 +94,16 @@ export async function askAboutScreen(
     (p) =>
       p.chat(
         [
-          { role: 'system', content: P.characterSystem(ctx.characterId, ctx.petName) },
-          { role: 'system', content: P.askPrompt(ctx.topic, Boolean(shot)) },
+          { role: 'system', content: P.askSystem(ctx.characterId, ctx.petName, ctx.topic, Boolean(shot)) },
           ...history.slice(-8),
           {
             role: 'user',
             content: shot ? [question, { image: shot }] : question,
           },
         ],
-        { temperature: 0.7, timeoutMs: 25_000, maxTokens: 700 },
+        { temperature: 0.5, timeoutMs: 20_000, maxTokens: 2048 },
       ),
     () =>
-      shot
-        ? `${pick(CHARACTERS[ctx.characterId].lines.sulk)} (My eyes are tired — the AI didn't answer. Try again in a moment.)`
-        : `${pick(CHARACTERS[ctx.characterId].lines.encourage)} (I can't reach my spellbook right now — try again shortly.)`,
+      `I couldn't get an answer from Gemini just now (it's probably rate-limited on the free tier), so I can't help with “${question.slice(0, 80)}” yet. Try again in a minute.`,
   );
 }
