@@ -1,0 +1,458 @@
+/* Once Upon a Focus — storybook theme tokens + shared components.
+   Used inside the widget Shadow DOM and on the options/popup pages. */
+
+:host,
+:root {
+  --parchment: #fbf8ee;
+  --parchment-2: #f3ecd8;
+  --parchment-3: #e9dfc2;
+  --ink: #3d2e1a;
+  --ink-soft: #6b5a3e;
+  --moss: #5b6236;
+  --sage: #87a28a;
+  --forest: #2f3a2a;
+  --crimson: #a3304a;
+  --gold: #d9b44a;
+  --gold-2: #f0d78a;
+  --powder: #8eb9cc;
+  --shadow: 0 10px 30px rgba(61, 46, 26, 0.25), 0 2px 6px rgba(61, 46, 26, 0.15);
+  --font-display: 'Pirata One', 'UnifrakturCook', Georgia, serif;
+  --font-body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --radius: 14px;
+}
+
+.ouaf {
+  font-family: var(--font-body);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+  box-sizing: border-box;
+}
+.ouaf *,
+.ouaf *::before,
+.ouaf *::after {
+  box-sizing: border-box;
+}
+.ouaf button,
+.ouaf input,
+.ouaf textarea,
+.ouaf select {
+  font: inherit;
+  color: inherit;
+}
+
+.display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+/* ---------- parchment card ---------- */
+.parchment {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.5), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(217, 180, 74, 0.12), transparent 50%),
+    var(--parchment);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 3px var(--parchment),
+    inset 0 0 0 4px var(--gold);
+  position: relative;
+}
+/* Ornaments only on the big "pages" (widget card, lockdown card, options book) */
+.lock-card::before,
+.lock-card::after,
+.book::before,
+.book::after {
+  content: '❦';
+  position: absolute;
+  color: var(--gold);
+  font-size: 14px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.lock-card::before,
+.book::before {
+  top: 6px;
+  left: 10px;
+}
+.lock-card::after,
+.book::after {
+  bottom: 6px;
+  right: 10px;
+  transform: rotate(180deg);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  background: var(--parchment-2);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 0 var(--ink);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    background 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--gold-2);
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn.primary {
+  background: var(--gold);
+}
+.btn.primary:hover {
+  background: var(--gold-2);
+}
+.btn.danger {
+  background: var(--crimson);
+  color: var(--parchment);
+}
+.btn.ghost {
+  background: transparent;
+  box-shadow: none;
+  border-color: transparent;
+}
+.btn.ghost:hover {
+  background: rgba(61, 46, 26, 0.08);
+}
+.btn.sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+.btn.icon {
+  padding: 4px 6px;
+  min-width: 28px;
+}
+
+/* ---------- inputs ---------- */
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  box-shadow: 0 0 0 3px rgba(217, 180, 74, 0.5);
+}
+.textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--parchment-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+.chip.ok {
+  background: #dfe9d9;
+}
+.chip.bad {
+  background: #f1d4d9;
+}
+.chip button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--parchment-2);
+}
+.badge.meta {
+  background: #d9e6ff;
+}
+.badge.gemini {
+  background: #e4ddff;
+}
+.badge.offline {
+  background: var(--parchment-3);
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+.small {
+  font-size: 12px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spacer {
+  flex: 1;
+}
+.center {
+  text-align: center;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ink) 20%, var(--ink) 80%, transparent);
+  opacity: 0.4;
+  margin: 8px 0;
+}
+
+/* ---------- speech bubble ---------- */
+.bubble {
+  position: relative;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 3px 0 var(--ink);
+  max-width: 230px;
+  animation: pop-in 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.bubble::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-left: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  bottom: -8px;
+  left: 18px;
+  transform: rotate(-45deg);
+}
+.bubble.roast {
+  background: #fff3e8;
+}
+.bubble.sulk {
+  background: #e9ecf5;
+}
+
+/* ---------- animations ---------- */
+@keyframes pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-6px, 2px);
+  }
+  20% {
+    transform: translate(6px, -2px);
+  }
+  30% {
+    transform: translate(-5px, 3px);
+  }
+  40% {
+    transform: translate(5px, -3px);
+  }
+  50% {
+    transform: translate(-4px, 1px);
+  }
+  60% {
+    transform: translate(4px, -1px);
+  }
+  70% {
+    transform: translate(-2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  90% {
+    transform: translate(-1px, 0);
+  }
+}
+@keyframes rage {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  20% {
+    transform: translate(-2px, 1px) rotate(-2deg);
+  }
+  40% {
+    transform: translate(2px, -1px) rotate(2deg);
+  }
+  60% {
+    transform: translate(-2px, 0) rotate(-1deg);
+  }
+  80% {
+    transform: translate(2px, 1px) rotate(1deg);
+  }
+}
+@keyframes sparkle {
+  0% {
+    transform: scale(0) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6) rotate(180deg);
+    opacity: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes page-flip-in {
+  from {
+    transform: perspective(800px) rotateY(-70deg);
+    opacity: 0;
+    transform-origin: left center;
+  }
+  to {
+    transform: perspective(800px) rotateY(0);
+    opacity: 1;
+    transform-origin: left center;
+  }
+}
+@keyframes storm-in {
+  0% {
+    transform: scale(3) translateY(-40%);
+    opacity: 0;
+    filter: blur(6px);
+  }
+  60% {
+    transform: scale(0.95) translateY(2%);
+    opacity: 1;
+    filter: blur(0);
+  }
+  80% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(163, 48, 74, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(163, 48, 74, 0);
+  }
+}
+@keyframes blink-eye {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+.anim-bob {
+  animation: bob 2.4s ease-in-out infinite;
+}
+.anim-wobble {
+  animation: wobble 1.2s ease-in-out infinite;
+}
+.anim-rage {
+  animation: rage 0.35s linear infinite;
+}
+.anim-shake {
+  animation: shake 0.6s linear;
+}
+.anim-fade {
+  animation: fade-in 0.3s ease;
+}
+.anim-flip {
+  animation: page-flip-in 0.35s ease-out;
+}
+
+/* ---------- scrollbars ---------- */
+.ouaf ::-webkit-scrollbar {
+  width: 8px;
+}
+.ouaf ::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 4px;
+  border: 2px solid var(--parchment);
+}

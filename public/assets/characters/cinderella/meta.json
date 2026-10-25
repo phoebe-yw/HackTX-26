@@ -1,0 +1,21 @@
+﻿{
+    "id":  "cinderella",
+    "name":  "Cinderella",
+    "hasArt":  false,
+    "poses":  [
+                  "idle",
+                  "happy",
+                  "suspicious",
+                  "annoyed",
+                  "furious",
+                  "sleeping",
+                  "celebrate"
+              ],
+    "spec":  "Transparent PNG, 512x512, character centered, ~80% of height, ~10% padding, facing slightly right, consistent baseline across poses.",
+    "palette":  [
+                    "#8EB9CC",
+                    "#E8C86B",
+                    "#D9B44A"
+                ],
+    "howToSwap":  "Drop the 7 PNGs in this folder named \u003cpose\u003e.png, set hasArt to true, reload the extension."
+}
