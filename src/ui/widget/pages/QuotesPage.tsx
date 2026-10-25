@@ -24,7 +24,7 @@ export function QuotesPage({ settings }: { settings: Settings }) {
   return (
     <div className="col">
       <div className="display" style={{ fontSize: 18 }}>📜 Words from {settings.petName || c.name}</div>
-      <div className="parchment quote-card anim-flip" key={ai ? ai.text : i}>
+      <div className="parchment quote-card anim-page" key={ai ? ai.text : i}>
         <div>
           <div className="mark">“</div>
           {ai ? ai.text : list[i]}

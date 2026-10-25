@@ -27,6 +27,7 @@ export default defineBackground(() => {
   void browser.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
 
   browser.runtime.onInstalled.addListener(async ({ reason }) => {
+    if (reason === 'install' || reason === 'update') void reinjectOpenTabs();
     await ensureTick();
     const settings = await store.get('settings');
     if (reason === 'install' || !settings.onboarded) {
@@ -41,6 +42,22 @@ export default defineBackground(() => {
     if (!existing) await browser.alarms.create(session.ALARM_TICK, { periodInMinutes: 0.5 });
     await ensureOffscreen();
   }
+
+  /** Chrome detaches content scripts from open tabs on install/reload; put the widget back. */
+  async function reinjectOpenTabs() {
+    const files = browser.runtime.getManifest().content_scripts?.flatMap((c) => c.js ?? []) ?? [];
+    if (!files.length) return;
+    const tabs = await browser.tabs.query({ url: ['http://*/*', 'https://*/*'] });
+    for (const t of tabs) {
+      if (t.id == null || t.discarded) continue;
+      chrome.scripting.executeScript({ target: { tabId: t.id }, files }).catch(() => {});
+    }
+  }
+
+  // The offscreen document can't subscribe to storage itself
+  browser.storage.onChanged.addListener((changes, area) => {
+    browser.runtime.sendMessage({ type: 'store:changed', payload: { changes, area } }).catch(() => {});
+  });
 
   let creatingOffscreen: Promise<void> | null = null;
   /** The offscreen document hosts the social backend (Firebase) for the whole browser. */
@@ -236,6 +253,11 @@ export default defineBackground(() => {
     // ---- social plumbing
     'social:ensure': async () => {
       await ensureOffscreen();
+      return { ok: true };
+    },
+    'store:get': async ({ area, keys }) => browser.storage[area].get(keys),
+    'store:set': async ({ area, items }) => {
+      await browser.storage[area].set(items);
       return { ok: true };
     },
 

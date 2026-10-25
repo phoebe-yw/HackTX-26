@@ -288,7 +288,7 @@ export function Widget({ onHidden }: { onHidden: () => void }) {
             </div>
           )}
           {!(onboardCta && page === 'home') && (
-            <div className="anim-flip">
+            <div className="anim-page">
               {page === 'home' && (
                 <HomePage
                   settings={settings}

@@ -52,13 +52,12 @@ export class NotConfiguredError extends ProviderError {
 
 export interface AiResult<T> {
   data: T;
-  /** Who actually answered: 'gemini' | 'meta' | 'offline' */
+  /** Who actually answered: 'gemini' | 'offline' */
   provider: AiProviderId;
   ms: number;
 }
 
 export const PROVIDER_LABEL: Record<AiProviderId, string> = {
   gemini: 'Powered by Gemini',
-  meta: 'Powered by Meta Muse',
   offline: 'Offline storybook',
 };

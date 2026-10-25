@@ -206,8 +206,8 @@
   border: 1.5px solid var(--ink);
   background: var(--parchment-2);
 }
-.badge.meta {
-  background: #d9e6ff;
+.badge.live {
+  background: #d9f0d4;
 }
 .badge.gemini {
   background: #e4ddff;
@@ -379,16 +379,14 @@
     opacity: 1;
   }
 }
-@keyframes page-flip-in {
+@keyframes page-in {
   from {
-    transform: perspective(800px) rotateY(-70deg);
+    transform: translateY(6px);
     opacity: 0;
-    transform-origin: left center;
   }
   to {
-    transform: perspective(800px) rotateY(0);
+    transform: none;
     opacity: 1;
-    transform-origin: left center;
   }
 }
 @keyframes storm-in {
@@ -443,8 +441,8 @@
 .anim-fade {
   animation: fade-in 0.3s ease;
 }
-.anim-flip {
-  animation: page-flip-in 0.35s ease-out;
+.anim-page {
+  animation: page-in 0.2s ease-out;
 }
 
 /* ---------- scrollbars ---------- */

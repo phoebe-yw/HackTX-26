@@ -123,7 +123,7 @@ function Flashcards({ cards }: { cards: RoomState['flashcards'] }) {
   const c = cards[i % cards.length];
   return (
     <div className="col" style={{ alignItems: 'center' }}>
-      <div className="parchment quote-card anim-flip" key={`${i}-${flipped}`} style={{ width: '100%', cursor: 'pointer', minHeight: 120 }} onClick={() => setFlipped((f) => !f)}>
+      <div className="parchment quote-card anim-page" key={`${i}-${flipped}`} style={{ width: '100%', cursor: 'pointer', minHeight: 120 }} onClick={() => setFlipped((f) => !f)}>
         <div>
           <div className="small muted" style={{ marginBottom: 6 }}>{flipped ? 'answer' : 'tap to flip'} · {i + 1}/{cards.length}</div>
           {flipped ? c.back : c.front}

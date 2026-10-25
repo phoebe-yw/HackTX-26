@@ -4,7 +4,7 @@ import * as store from '@/core/storage';
 import type { AiProviderId, ChallengeType, Settings } from '@/core/types';
 import { useStored } from '@/ui/hooks';
 
-const PROVIDERS: AiProviderId[] = ['gemini', 'meta', 'offline'];
+const PROVIDERS: AiProviderId[] = ['gemini', 'offline'];
 
 export function DevPanel({ s, patch, toast }: { s: Settings; patch: (p: Partial<Settings>) => void; toast: (m: string) => void }) {
   const [overrides] = useStored('aiOverrides');
@@ -54,34 +54,24 @@ export function DevPanel({ s, patch, toast }: { s: Settings; patch: (p: Partial<
       </section>
 
       <section className="col">
-        <h2>🧠 AI providers</h2>
-        <div className="settings-grid">
-          {(['vision', 'social'] as const).map((mod) => (
-            <div key={mod} className="field">
-              <label>{mod === 'vision' ? '👁️ visionAI (the eyes — always Gemini)' : '✨ socialAI (the social brain)'}</label>
-              <div className="row">
-                {PROVIDERS.map((p) => (
-                  <button
-                    key={p}
-                    className={`btn sm ${(overrides?.[mod] ?? (mod === 'vision' ? (import.meta.env.WXT_VISION_AI_PROVIDER || 'gemini') : (import.meta.env.WXT_SOCIAL_AI_PROVIDER || 'gemini'))) === p ? 'primary' : ''}`}
-                    disabled={mod === 'vision' && p !== 'gemini'}
-                    onClick={() => store.update('aiOverrides', { [mod]: p })}
-                  >
-                    {p}
-                  </button>
-                ))}
-                <button className="btn sm ghost" title="Use .env default" onClick={() => store.update('aiOverrides', { [mod]: null })}>reset</button>
-              </div>
-              <div className="small muted">
-                env default: {mod === 'vision' ? import.meta.env.WXT_VISION_AI_PROVIDER || 'gemini' : import.meta.env.WXT_SOCIAL_AI_PROVIDER || 'gemini'}
-              </div>
-            </div>
-          ))}
+        <h2>🧠 AI (Gemini)</h2>
+        <div className="field">
+          <label>✨ socialAI: use Gemini, or force the offline storybook to show the fallback</label>
+          <div className="row">
+            {PROVIDERS.map((p) => (
+              <button
+                key={p}
+                className={`btn sm ${(overrides?.social ?? 'gemini') === p ? 'primary' : ''}`}
+                onClick={() => store.update('aiOverrides', { social: p })}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className="small muted">👁️ visionAI (screen checks, roasts, look-at-my-screen) always uses Gemini.</div>
         </div>
         <div className="row" style={{ flexWrap: 'wrap' }}>
-          {PROVIDERS.filter((p) => p !== 'offline').map((p) => (
-            <button key={p} className="btn sm" onClick={() => doPing(p)}>Ping {p}</button>
-          ))}
+          <button className="btn sm" onClick={() => doPing('gemini')}>Ping gemini</button>
           <button className="btn sm primary" disabled={testing} onClick={runTests}>{testing ? 'Testing…' : 'Test all socialAI functions'}</button>
           <button className="btn sm" onClick={async () => { setScreen('…'); const r = await send('ai:screenCheckNow', {}); setScreen(r.summary); }}>Screen check now</button>
         </div>

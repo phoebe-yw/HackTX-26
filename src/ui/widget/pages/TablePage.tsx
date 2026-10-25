@@ -29,7 +29,7 @@ export function TablePage({ settings, onOpenTavern }: { settings: Settings; onOp
 
   // Wake the social backend when the page opens (re-mirrors state into storage.session)
   useEffect(() => {
-    void social({ cmd: 'ping' }).catch(() => {});
+    void social({ cmd: 'ping' }).catch((e: unknown) => setMsg(e instanceof Error ? e.message : String(e)));
   }, []);
 
   async function addFriend() {
@@ -51,8 +51,15 @@ export function TablePage({ settings, onOpenTavern }: { settings: Settings; onOp
       <div className="row">
         <span className="display" style={{ fontSize: 18 }}>🪑 The Study Table</span>
         <span className="spacer" />
-        {me && <span className={`badge ${me.mode === 'firebase' ? 'meta' : 'offline'}`} title={me.error ?? ''}>{me.mode === 'firebase' ? 'live' : 'local'}</span>}
+        {me && <span className={`badge ${me.mode === 'firebase' ? 'live' : 'offline'}`} title={me.error ?? ''}>{me.mode === 'firebase' ? 'live' : 'local'}</span>}
       </div>
+
+      {(!me || me.error) && (
+        <div className="small muted">
+          {!me ? 'Connecting to the Study Table…' : `Couldn't reach Firebase, using local mode: ${me.error}`}
+          {!me && msg && <div>{msg}</div>}
+        </div>
+      )}
 
       {me && (
         <div className="parchment" style={{ padding: '8px 10px' }}>

@@ -224,7 +224,7 @@ export abstract class SocialBackend {
     this.game = game;
     await this.pushQueue({ status: 'matched', since: Date.now() });
     await this.pushGame();
-    // Icebreaker via socialAI (Meta later)
+    // Icebreaker via socialAI
     void socialAI.icebreaker(this.settings.topic, DEMO_STRANGER.topic).then(async (r) => {
       if (this.game?.id !== game.id) return;
       this.game = { ...this.game, icebreaker: r.data, icebreakerProvider: r.provider };

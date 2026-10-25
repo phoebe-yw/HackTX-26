@@ -8,13 +8,13 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 
 | Phase | Target | Status | Notes |
 |---|---|---|---|
-| 0 Scaffold + AI layer | 7–8pm | ✅ | WXT + React + TS, floating draggable pet, `visionAI`/`socialAI` with Gemini + Meta stub + offline fallback |
+| 0 Scaffold + AI layer | 7–8pm | ✅ | WXT + React + TS, floating draggable pet, `visionAI`/`socialAI` with Gemini + offline fallback |
 | 1 Onboarding, timer, widget shell | 8–10pm | ✅ | Storybook onboarding, settings, Cinderella clock, pages, collapse/size/hide/disable |
 | 2 Mood + Lockdown + challenges | 10pm–12:30am | ✅ | URL/list + idle signals, 4 levels, lockdown on all tabs, riddle/quiz/oath/friend, hold-Esc valve |
 | 3 Gemini eyes + Demo Mode v1 | 12:30–3am | ✅ | Screen check (structured JSON), roasts, "look at my screen" chat, domain cache, 429 cooldown, dev panel |
-| 4 Accounts, friends, Study Table | 3–5:30am | 🟡 | Code complete (offscreen doc, anonymous auth, friend codes, presence, nudges, challenges). **Needs Firebase config in `.env`** — runs in local/demo mode until then. Untested against a real project. |
-| 5 Group Study Room + Break Tavern | 5:30–8am | 🟡 | Code complete: rooms + shared flashcards/quiz, Spellbound race, matchmaking (Firestore transaction), bot stranger, chat, add friend. Local mode works without Firebase. |
-| 6a Switch socialAI → Meta | 8–9:30am | ⬜ | `SWITCH_TO_META.md` written; dev-panel self-test button exists; `meta.ts` stub ready |
+| 4 Accounts, friends, Study Table | 3–5:30am | 🟡 | Firebase project `once-upon-a-focus` live: anonymous sign-in works, `users/` + `codes/` docs written (verified via REST, Sat 11:40pm). Friends/nudges/challenges still need a two-profile test. |
+| 5 Group Study Room + Break Tavern | 5:30–8am | 🟡 | Code complete: rooms + shared flashcards/quiz, Spellbound race, matchmaking (Firestore transaction), bot stranger, chat, add friend. Not yet exercised against Firestore. |
+| 6a Switch socialAI → Meta | — | ⛔ | Dropped Sat 11:25pm: team is going Gemini-only. `meta.ts` and `SWITCH_TO_META.md` removed. |
 | 6b Polish, video, README, Devpost | 9:30–11:30am | 🟡 | README done; Devpost write-up + video not started |
 
 **Status at Sat ~8:55pm:** all phases 0–5 are written, typecheck clean, `npm run build` clean. Nothing has been clicked in a real Chrome yet (no browser automation available on this machine — disk is nearly full, Playwright couldn't install). First team test pass is the next step; expect a round of fixes.
@@ -38,7 +38,7 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - ✅ Gemini roasts referencing `roast_hook`
 - ✅ Ask page with "👁️ look at my screen" (screenshot attached to the question)
 - ✅ Demo Mode: timers in seconds, ~30s climb to lockdown, 5s screen checks, fake friends, mood slider, force-lockdown buttons
-- ✅ Provider layer: `TextProvider` interface, `gemini.ts`, `meta.ts` stub, offline curated, fallback chain, provider badge, live override in dev panel, self-test button
+- ✅ Provider layer: `TextProvider` interface, `gemini.ts`, offline curated, fallback chain, provider badge, Gemini/offline toggle in dev panel, self-test button
 
 ### Social (Phases 4–5) — written, pending Firebase config + testing
 - 🟡 Anonymous account + display name + 6-char friend code (`users/`, `codes/`)
@@ -63,6 +63,12 @@ Timeline (Sat 7:00pm → Sun 11:30am). Plan approved Sat 7:30pm. Team asked to r
 - **Art pipeline**: `public/assets/characters/<id>/meta.json` has `hasArt:false`; drop 7 PNGs + flip to `true` to replace the SVG placeholders. Spec in each `meta.json`.
 - **Lockdown scope**: every tab (state lives in storage), so new tabs don't escape it.
 - **Screen checks**: 60s normal / 5s demo; skipped on allowlisted sites (quota) and sensitive sites.
+
+## Fixed after first test pass (Sat 11pm)
+- Social backend never started: offscreen documents can't use `chrome.storage`. Storage now goes through the service worker (`store:get`/`store:set`, changes forwarded as `store:changed`).
+- Widget vanishing on tabs: re-injected into open tabs on install/update (`scripting`), anchored to `<html>` instead of `<body>`, re-attached if a page removes it, and key presses no longer leak to page shortcuts.
+- Page-flip animation replaced with a short fade.
+- Duck had a bill and a drawn mouth; the bill is now the mouth and changes with mood.
 
 ## Known bugs / caveats
 - `chrome.alarms` minimum granularity is 30s; demo-second phases rely on the widget backstop (works whenever a tab with the widget is visible).

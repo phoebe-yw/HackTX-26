@@ -161,7 +161,7 @@ export interface DomainCacheEntry {
   topic: string;
 }
 
-export type AiProviderId = 'gemini' | 'meta' | 'offline';
+export type AiProviderId = 'gemini' | 'offline';
 
 export interface AiOverrides {
   social: AiProviderId | null;

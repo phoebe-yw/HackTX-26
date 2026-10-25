@@ -1,4 +1,4 @@
-// socialAI — the SOCIAL BRAIN. Gemini now → Meta Muse later (config flip).
+// socialAI — the SOCIAL BRAIN (Gemini, with the offline storybook as fallback).
 // groupReply() / generateFlashcards() / generateQuiz() / icebreaker() /
 // generateChallenge() / quote() / riddle()
 import type { CharacterId, QuizQuestion, RiddleChallenge } from '@/core/types';

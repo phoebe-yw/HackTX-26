@@ -82,6 +82,7 @@ function Face({
   scale = 1,
   eyeColor = '#3D2E1A',
   cheek = '#e89aa5',
+  mouth = true,
 }: {
   cx: number;
   cy: number;
@@ -89,6 +90,8 @@ function Face({
   scale?: number;
   eyeColor?: string;
   cheek?: string;
+  /** Characters with a beak/bill draw their own mouth */
+  mouth?: boolean;
 }) {
   const s = scale;
   const ex = 9 * s; // eye offset
@@ -158,6 +161,7 @@ function Face({
 
   // mouth
   const my = cy + 7 * s;
+  if (!mouth) return <g>{elems}</g>;
   switch (mood) {
     case 'happy':
       elems.push(<path key="m" d={`M${cx - 5 * s},${my} q${5 * s},${5 * s} ${10 * s},0`} stroke={eyeColor} strokeWidth={2 * s} fill="none" strokeLinecap="round" />);
@@ -296,9 +300,22 @@ function renderBody(id: CharacterId, pose: Pose) {
           <circle cx="56" cy="38" r="20" fill="#f2cf5b" stroke="#3D2E1A" strokeWidth="2.5" />
           {/* tuft */}
           <path d="M50 19 q4 -8 10 -2 q2 -6 8 -2" fill="none" stroke="#3D2E1A" strokeWidth="2" strokeLinecap="round" />
-          {/* bill */}
-          <path d={furious ? 'M72 40 q14 -4 16 3 q-4 8 -16 6 z M72 46 q12 2 14 5 q-6 4 -14 -1 z' : 'M72 40 q14 -3 16 4 q-6 6 -16 3 z'} fill="#e8893a" stroke="#3D2E1A" strokeWidth="2" strokeLinejoin="round" />
-          <Face cx={56} cy={40} mood={mood} scale={0.85} />
+          <Face cx={56} cy={36} mood={mood} scale={0.85} mouth={false} />
+          {/* bill (it is the mouth): open when yelling or cheering, tilted when suspicious */}
+          {furious || mood === 'celebrate' ? (
+            <g stroke="#3D2E1A" strokeWidth="2" strokeLinejoin="round">
+              <path d="M47 46 q9 12 18 0 z" fill="#7a2a3a" />
+              <path d="M43 44 q13 -6 26 0 q-4 4 -13 4 q-9 0 -13 -4 z" fill="#e8893a" />
+              <path d="M47 50 q9 9 18 0 q-9 3 -18 0 z" fill="#d9772c" />
+            </g>
+          ) : (
+            <g transform={mood === 'suspicious' ? 'rotate(-7 56 46)' : undefined}>
+              <path d="M43 44 q13 -6 26 0 q-3 7 -13 7 q-10 0 -13 -7 z" fill="#e8893a" stroke="#3D2E1A" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M45 46 q11 3 22 0" fill="none" stroke="#3D2E1A" strokeWidth="1.2" strokeLinecap="round" opacity={0.6} />
+              <circle cx="52" cy="43" r="0.9" fill="#3D2E1A" />
+              <circle cx="60" cy="43" r="0.9" fill="#3D2E1A" />
+            </g>
+          )}
           {/* feet */}
           <path d="M40 92 l-6 5 h12 z M60 92 l-6 5 h12 z" fill="#e8893a" stroke="#3D2E1A" strokeWidth="1.5" />
           {mood === 'celebrate' && <Sparkles cx={56} cy={40} />}

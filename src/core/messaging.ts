@@ -44,6 +44,9 @@ export interface Requests {
 
   // social plumbing (commands themselves go to the offscreen doc as 'social:cmd')
   'social:ensure': { req: {}; res: { ok: true } };
+  /** Storage bridge for the offscreen document, which has no chrome.storage */
+  'store:get': { req: { area: 'local' | 'session'; keys: string | string[] }; res: Record<string, unknown> };
+  'store:set': { req: { area: 'local' | 'session'; items: Record<string, unknown> }; res: { ok: true } };
 
   // demo / dev
   'demo:set': { req: { enabled: boolean }; res: { ok: true } };

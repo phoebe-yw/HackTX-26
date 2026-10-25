@@ -118,7 +118,7 @@ function Onboarding({ s, patch, onDone }: { s: Settings; patch: (p: Partial<Sett
 
   return (
     <div className="page ouaf">
-      <div className="parchment book anim-flip" key={step}>
+      <div className="parchment book anim-page" key={step}>
         <div className="row">
           <div className="step-dots">{Array.from({ length: total }, (_, i) => <span key={i} className={i <= step ? 'on' : ''} />)}</div>
           <span className="spacer" />

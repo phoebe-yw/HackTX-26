@@ -18,7 +18,8 @@ export default defineConfig({
     //  idle     – idle signal for the mood engine
     //  tabs     – active tab URL/title for distraction signals + captureVisibleTab
     //  offscreen – hosts the Firebase realtime connection (extension-origin page)
-    permissions: ['storage', 'alarms', 'idle', 'tabs', 'offscreen'],
+    //  scripting – re-inject the widget into already-open tabs after install/update
+    permissions: ['storage', 'alarms', 'idle', 'tabs', 'offscreen', 'scripting'],
     // host_permissions <all_urls> – inject the widget on every page + screenshots
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [

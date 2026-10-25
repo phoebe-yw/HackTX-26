@@ -20,7 +20,10 @@ export default defineContentScript({
     const ui = await createShadowRootUi(ctx, {
       name: 'once-upon-a-focus',
       position: 'inline',
-      anchor: 'body',
+      // <html>, not <body>: SPAs (GitHub, etc.) swap out <body> and would take the widget with it
+      anchor: 'html',
+      // Typing in the widget must not trigger page shortcuts (YouTube's "f" = fullscreen hides us)
+      isolateEvents: true,
       onMount(container) {
         const host = document.createElement('div');
         container.append(host);
@@ -34,6 +37,13 @@ export default defineContentScript({
       },
     });
     ui.mount();
+
+    // Some pages rewrite the whole document; put the widget back if it gets removed
+    const keepAlive = new MutationObserver(() => {
+      if (!ui.shadowHost.isConnected) document.documentElement.append(ui.shadowHost);
+    });
+    keepAlive.observe(document.documentElement, { childList: true });
+    ctx.onInvalidated(() => keepAlive.disconnect());
   },
 });
 

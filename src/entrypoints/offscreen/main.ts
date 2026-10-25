@@ -12,13 +12,13 @@ let starting: Promise<SocialBackend> | null = null;
 
 async function seedMe(): Promise<Me> {
   const settings = await store.get('settings');
-  const res = await browser.storage.local.get(['social.localUid', 'social.localCode']);
+  const res = await store.rawGet('local', ['social.localUid', 'social.localCode']);
   let localUid = res['social.localUid'] as string | undefined;
   let localCode = res['social.localCode'] as string | undefined;
   if (!localUid) {
     localUid = 'local-' + Math.random().toString(36).slice(2, 10);
     localCode = genCode();
-    await browser.storage.local.set({ 'social.localUid': localUid, 'social.localCode': localCode });
+    await store.rawSet('local', { 'social.localUid': localUid, 'social.localCode': localCode });
   }
   const name = settings.displayName || `${settings.petName || CHARACTERS[settings.characterId].defaultPetName}'s scholar`;
   return { uid: localUid, name, code: localCode ?? 'LOCAL0', characterId: settings.characterId, mode: 'local', ready: true };
@@ -53,6 +53,11 @@ function ensure(): Promise<SocialBackend> {
 
 browser.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
   const m = msg as { type?: string; payload?: SocialCmd } | null;
+  if (m?.type === 'store:changed') {
+    const p = m.payload as unknown as { changes: Record<string, { newValue?: unknown; oldValue?: unknown }>; area: string };
+    store.dispatchForwardedChange(p.changes, p.area);
+    return false;
+  }
   if (!m || m.type !== 'social:cmd' || !m.payload) return false;
   ensure()
     .then((b) => b.handle(m.payload!))

@@ -17,6 +17,40 @@ import type {
   SessionState,
   Settings,
 } from './types';
+import { send } from './messaging';
+
+// ---- raw access. Offscreen documents only get chrome.runtime, so there every
+// read/write goes through the service worker and changes are forwarded back.
+type Area = 'local' | 'session';
+type Changes = Record<string, { newValue?: unknown; oldValue?: unknown }>;
+type ChangeListener = (changes: Changes, area: string) => void;
+
+const direct = Boolean((browser as unknown as { storage?: unknown }).storage);
+const forwardedListeners = new Set<ChangeListener>();
+
+export async function rawGet(area: Area, keys: string | string[]): Promise<Record<string, unknown>> {
+  if (direct) return browser.storage[area].get(keys);
+  return send('store:get', { area, keys });
+}
+
+export async function rawSet(area: Area, items: Record<string, unknown>): Promise<void> {
+  if (direct) return browser.storage[area].set(items);
+  await send('store:set', { area, items });
+}
+
+function onChanged(listener: ChangeListener): () => void {
+  if (direct) {
+    browser.storage.onChanged.addListener(listener);
+    return () => browser.storage.onChanged.removeListener(listener);
+  }
+  forwardedListeners.add(listener);
+  return () => forwardedListeners.delete(listener);
+}
+
+/** Offscreen: deliver a storage change forwarded by the service worker. */
+export function dispatchForwardedChange(changes: Changes, area: string) {
+  for (const l of forwardedListeners) l(changes, area);
+}
 
 export interface LocalSchema {
   settings: Settings;
@@ -46,7 +80,7 @@ const DEFAULTS: LocalSchema = {
 export type LocalKey = keyof LocalSchema;
 
 export async function get<K extends LocalKey>(key: K): Promise<LocalSchema[K]> {
-  const res = await browser.storage.local.get(key);
+  const res = await rawGet('local', key);
   const val = res[key] as LocalSchema[K] | undefined;
   if (val === undefined) return DEFAULTS[key];
   // Merge objects with defaults so new fields added later don't come back undefined.
@@ -57,7 +91,7 @@ export async function get<K extends LocalKey>(key: K): Promise<LocalSchema[K]> {
 }
 
 export async function getMany<K extends LocalKey>(keys: K[]): Promise<Pick<LocalSchema, K>> {
-  const res = await browser.storage.local.get(keys);
+  const res = await rawGet('local', keys);
   const out = {} as Pick<LocalSchema, K>;
   for (const k of keys) {
     const val = res[k] as LocalSchema[K] | undefined;
@@ -70,7 +104,7 @@ export async function getMany<K extends LocalKey>(keys: K[]): Promise<Pick<Local
 }
 
 export async function set<K extends LocalKey>(key: K, value: LocalSchema[K]): Promise<void> {
-  await browser.storage.local.set({ [key]: value });
+  await rawSet('local', { [key]: value });
 }
 
 export async function update<K extends LocalKey>(
@@ -91,19 +125,14 @@ export function watch<K extends LocalKey>(
   key: K,
   cb: (value: LocalSchema[K]) => void,
 ): () => void {
-  const listener = (
-    changes: Record<string, { newValue?: unknown; oldValue?: unknown }>,
-    area: string,
-  ) => {
+  return onChanged((changes, area) => {
     if (area !== 'local' || !(key in changes)) return;
     const nv = changes[key].newValue as LocalSchema[K] | undefined;
     if (nv === undefined) cb(DEFAULTS[key]);
     else if (isPlainObject(DEFAULTS[key]) && isPlainObject(nv))
       cb({ ...(DEFAULTS[key] as object), ...(nv as object) } as LocalSchema[K]);
     else cb(nv);
-  };
-  browser.storage.onChanged.addListener(listener);
-  return () => browser.storage.onChanged.removeListener(listener);
+  });
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -114,7 +143,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 // mirror for live social data coming from the offscreen Firebase document.
 export async function getSession<T>(key: string, fallback: T): Promise<T> {
   try {
-    const res = await browser.storage.session.get(key);
+    const res = await rawGet('session', key);
     return (res[key] as T | undefined) ?? fallback;
   } catch {
     // Content scripts can't read storage.session until the SW has set the access level
@@ -122,13 +151,11 @@ export async function getSession<T>(key: string, fallback: T): Promise<T> {
   }
 }
 export async function setSession(key: string, value: unknown): Promise<void> {
-  await browser.storage.session.set({ [key]: value });
+  await rawSet('session', { [key]: value });
 }
 export function watchSession<T>(key: string, cb: (v: T | undefined) => void): () => void {
-  const listener = (changes: Record<string, { newValue?: unknown }>, area: string) => {
+  return onChanged((changes, area) => {
     if (area !== 'session' || !(key in changes)) return;
     cb(changes[key].newValue as T | undefined);
-  };
-  browser.storage.onChanged.addListener(listener);
-  return () => browser.storage.onChanged.removeListener(listener);
+  });
 }
